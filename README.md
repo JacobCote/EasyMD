@@ -1,5 +1,5 @@
 # EasyMD
-
+<pre>
 usage: simulateComplex.py [-h] [-p PROTEIN] [-l LIGAND] [-o OUTPUT] [-s STEPS]
                           [-z STEP_SIZE] [-f FRICTION_COEFF] [-i INTERVAL]
                           [-t TEMPERATURE] [--solvate] [--GBIS]
@@ -68,3 +68,4 @@ options:
                         path to the restart files (default: None)
   --clock CLOCK         Run the simulation based on clock time in minutes
                         instead of steps. (default: None)
+  <pre>
