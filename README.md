@@ -1,71 +1,122 @@
 # EasyMD
-<pre>
-usage: simulateComplex.py [-h] [-p PROTEIN] [-l LIGAND] [-o OUTPUT] [-s STEPS]
-                          [-z STEP_SIZE] [-f FRICTION_COEFF] [-i INTERVAL]
-                          [-t TEMPERATURE] [--solvate] [--GBIS]
-                          [--padding PADDING]
-                          [--water-model {tip3p,spce,tip4pew,tip5p,swm4ndp}]
-                          [--positive-ion POSITIVE_ION]
-                          [--negative-ion NEGATIVE_ION]
-                          [--ionic-strength IONIC_STRENGTH] [--no-neutralize]
-                          [-e EQUILIBRATION_STEPS]
-                          [--protein-force-field PROTEIN_FORCE_FIELD]
-                          [--ligand-force-field LIGAND_FORCE_FIELD]
-                          [--water-force-field WATER_FORCE_FIELD] [--CUDA]
-                          [--remove [REMOVE ...]] [--ph PH] [--restart]
-                          [--restart_dir RESTART_DIR] [--clock CLOCK]
 
-Simulate
+Welcome to EasyMD, a Python package for simulating complex molecular systems. With EasyMD, you can easily perform molecular dynamics simulations and explore the behavior of biomolecules in different environments.
 
-options:
-  -h, --help            show this help message and exit
-  -p PROTEIN, --protein PROTEIN
-                        Protein PDB file (default: None)
-  -l LIGAND, --ligand LIGAND
-                        Ligand name in pdb file (often LIG, check your pdb
-                        file to be sure of the name) (default: None)
-  -o OUTPUT, --output OUTPUT
-                        Base name for output files (default: output)
-  -s STEPS, --steps STEPS
-                        Number of steps (default: None)
-  -z STEP_SIZE, --step-size STEP_SIZE
-                        Step size (ps (default: 0.002)
-  -f FRICTION_COEFF, --friction-coeff FRICTION_COEFF
-                        Friction coefficient (ps) (default: 1)
-  -i INTERVAL, --interval INTERVAL
-                        Reporting interval (default: 1000)
-  -t TEMPERATURE, --temperature TEMPERATURE
-                        Temperature (K) (default: 300)
-  --solvate             Add solvent box (default: False)
-  --GBIS                Don't add solvent box, use Born generalize implicit
-                        solvent (default: False)
-  --padding PADDING     Padding for solvent box (A) (default: 10)
-  --water-model {tip3p,spce,tip4pew,tip5p,swm4ndp}
-                        Water model for solvation (default: tip3p)
-  --positive-ion POSITIVE_ION
-                        Positive ion for solvation (default: Na+)
-  --negative-ion NEGATIVE_ION
-                        Negative ion for solvation (default: Cl-)
-  --ionic-strength IONIC_STRENGTH
-                        Ionic strength for solvation (default: 0)
-  --no-neutralize       Don't add ions to neutralize (default: False)
-  -e EQUILIBRATION_STEPS, --equilibration-steps EQUILIBRATION_STEPS
-                        Number of equilibration steps (default: 200)
-  --protein-force-field PROTEIN_FORCE_FIELD
-                        Protein force field (default: amber/ff14SB.xml)
-  --ligand-force-field LIGAND_FORCE_FIELD
-                        Ligand force field (default: openff-2.2.0)
-  --water-force-field WATER_FORCE_FIELD
-                        Water force field (default: amber/tip3p_standard.xml)
-  --CUDA                Use CUDA platform (default: False)
-  --remove [REMOVE ...]
-                        Space separated molecules name to remove ex: --remove
-                        DMS LIG CA MG ... (default: ['DMS'])
-  --ph PH               Ph for the protonation state of the residus (default:
-                        7.0)
-  --restart             Use CUDA platform (default: False)
-  --restart_dir RESTART_DIR
-                        path to the restart files (default: None)
-  --clock CLOCK         Run the simulation based on clock time in minutes
-                        instead of steps. (default: None)
-  <pre>
+## Installation
+To install EasyMD, simply run the following command:
+```bash
+git clone https://github.com/JacobCote/EasyMD.git
+conda create --name MdEnv --file requirements.txt
+conda activate MdEnv
+```
+or with pip
+```bash
+git clone https://github.com/JacobCote/EasyMD.git
+cd EasyMD
+python -m venv .venv
+source  .venv/bin/source
+pip install -r requirements.txt
+```
+
+## Usage
+To use EasyMD, you can run the `simulate.py` script with the following options:
+```bash
+usage: simulate.py [-h] [-p PROTEIN] [-l LIGAND] [-o OUTPUT] [-s STEPS]
+        [-z STEP_SIZE] [-f FRICTION_COEFF] [-i INTERVAL]
+        [-t TEMPERATURE] [--solvate] [--GBIS]
+        [--padding PADDING]
+        [--water-model {tip3p,spce,tip4pew,tip5p,swm4ndp}]
+        [--positive-ion POSITIVE_ION]
+        [--negative-ion NEGATIVE_ION]
+        [--ionic-strength IONIC_STRENGTH] [--no-neutralize]
+        [-e EQUILIBRATION_STEPS]
+        [--protein-force-field PROTEIN_FORCE_FIELD]
+        [--ligand-force-field LIGAND_FORCE_FIELD]
+        [--water-force-field WATER_FORCE_FIELD] [--CUDA]
+        [--remove [REMOVE ...]] [--ph PH] [--restart]
+        [--restart_dir RESTART_DIR] [--clock CLOCK]
+```
+
+You can customize the simulation by providing the necessary options. Here are some of the available options:
+
+- `-p, --protein`: Specify the protein PDB file.
+- `-l, --ligand`: Specify the ligand name in the PDB file.
+- `-o, --output`: Specify the base name for output files.
+- `-s, --steps`: Specify the number of simulation steps.
+- `-z, --step-size`: Specify the step size in ps.
+- `-f, --friction-coeff`: Specify the friction coefficient in ps.
+- `-i, --interval`: Specify the reporting interval.
+- `-t, --temperature`: Specify the temperature in K.
+- `--solvate`: Add a solvent box to the system.
+- `--GBIS`: Use Born generalize implicit solvent instead of adding a solvent box.
+- `--padding`: Specify the padding for the solvent box in A.
+- `--water-model`: Specify the water model for solvation.
+- `--positive-ion`: Specify the positive ion for solvation.
+- `--negative-ion`: Specify the negative ion for solvation.
+- `--ionic-strength`: Specify the ionic strength for solvation.
+- `--no-neutralize`: Do not add ions to neutralize the system.
+- `-e, --equilibration-steps`: Specify the number of equilibration steps.
+- `--protein-force-field`: Specify the protein force field.
+- `--ligand-force-field`: Specify the ligand force field.
+- `--water-force-field`: Specify the water force field.
+- `--CUDA`: Use the CUDA platform for simulation.
+- `--remove`: Specify the molecules to remove from the system.
+- `--ph`: Specify the pH for the protonation state of the residues.
+- `--restart`: Use the restart files for simulation.
+- `--restart_dir`: Specify the path to the restart files.
+- `--clock`: Run the simulation based on clock time instead of steps wich can be a good option when running on clusters. You need to take into account time for system creation, minimization and equilibration since the clock argument only applies to the simulation.
+
+By default, EasyMD uses the following settings:
+- Protein: No default
+- Ligand: No default
+- Output: `out_X`
+- Steps: `10000`
+- Step size: `2.0`
+- Friction coefficient: `1.0`
+- Reporting interval: `1000`
+- Temperature: `300 K`
+- Solvate: `False`
+- GBIS: `False`
+- Padding: `10 A`
+- Water model: `tip3p`
+- Positive ion: `Na+`
+- Negative ion: `Cl-`
+- Ionic strength: `0.0`
+- Neutralize: `True`
+- Equilibration steps: `200`
+- Protein force field: `amber/ff14SB.xml`
+- Ligand force field: `openff-2.2.0` (take note that GAFF forcefield is not available at this time. See https://github.com/openmm/openmmforcefields/releases/tag/0.13.0  )
+- Water force field: `tip3p`
+- CUDA: `False`
+- Remove: `['DMS']`
+- pH: `7.0`
+- Restart: `False`
+- Restart directory: `None`
+- Clock: `False`
+
+Feel free to explore and experiment with different options to suit your needs.
+
+There are examples provided in the `examples` folder to setup a simulation.
+
+## Roadmap
+
+- [ ] Add examples in examples folder 
+  - [ ] Solvated
+  - [ ] Implicit
+  - [ ] Restart
+- [ ] Add Changelog
+- [ ] Add an analysing tool for trajectory analysis
+- [ ] Add simulated annealing simulations
+See the [open issues](https://github.com/JacobCote/EasyMD/issues) for a full list of proposed features (and known issues).
+
+## Contributing
+If you would like to contribute to EasyMD, please fork the repository and submit a pull request. We welcome any contributions, including bug fixes, new features, and documentation improvements.
+
+## License
+EasyMD is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+## Contact
+If you have any questions or suggestions, feel free to open an issue or contact me at jacobcote@example.com.
+
+
+

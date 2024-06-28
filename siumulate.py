@@ -3,20 +3,17 @@ Run a MD simulation for a complex, optionally adding a solvent box
 """
 
 import sys, time, argparse
-from openff.toolkit import Molecule
-from openmmforcefields.generators import SystemGenerator
-import openmm
-from openmm import app, unit, LangevinIntegrator, Vec3
-from openmm.app import PDBFile, Simulation, Modeller, PDBReporter, StateDataReporter, DCDReporter
-from openff.toolkit import ForceField, Molecule, Topology
 import os
+import yaml
+import pprint
+import openmm
+from openmm.app import PDBFile, Simulation, StateDataReporter, DCDReporter
+from openmm import app, unit, LangevinIntegrator 
 import utils.utils as utils
-from utils.openbabel_charge import get_charges
 from prepare.prep_complex import prep_complex
 from prepare.prep_prot import prep_prot
 from restart.restart import prep_restart_ligand,restart_simulation,prep_restart
-import yaml
-import pprint
+
 
 
 t0 = time.time()
@@ -43,7 +40,7 @@ parser.add_argument("--negative-ion", default="Cl-", help="Negative ion for solv
 parser.add_argument("--ionic-strength", type=float, default="0", help="Ionic strength for solvation")
 parser.add_argument("--no-neutralize", action='store_true', help="Don't add ions to neutralize")
 parser.add_argument("-e", "--equilibration-steps", type=int, default=200, help="Number of equilibration steps")
-parser.add_argument("--protein-force-field", default='amber/ff14SB.xml', help="Protein force field")
+parser.add_argument("--protein-force-field", default='amber14-all', help="Protein force field")
 parser.add_argument("--ligand-force-field", default='openff-2.2.0', help="Ligand force field")
 parser.add_argument("--water-force-field", default='amber/tip3p_standard.xml', help="Water force field")
 parser.add_argument("--CUDA", action='store_true', help="Use CUDA platform")
@@ -111,25 +108,31 @@ if args.restart:
          
     )
     
-
+# create a new directory for the output if not restarting
 else:
-    # create a new directory for the output if not restarting
-    exist = True
-    i = 0
-    while exist:
-        out_dir = 'out_'+str(i)
-        exist = os.path.isdir(out_dir)
-        if not exist:
-            os.mkdir(out_dir)
+    if args.output is None:
+   
+        exist = True
+        i = 0
+        while exist:
+            out_dir = 'out_'+str(i)
+            exist = os.path.isdir(out_dir)
+            if not exist:
+                os.mkdir(out_dir)
 
-        i += 1
-
+            i += 1
+    else:
+        # strip the trailing slash
+        outdir = args.output.rstrip('/')
+        if not os.path.isdir(outdir):
+            os.mkdir(outdir)
+           
 
 
 
 pdb_in = args.protein
 mol_in = args.ligand
-output_traj_dcd =  + f'output_traj_{last_state}.dcd'
+output_traj_dcd = f'output_traj_{last_state}.dcd'
 num_steps = args.steps
 reporting_interval = args.interval
 temperature = args.temperature * unit.kelvin
