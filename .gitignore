@@ -1,3 +1,4 @@
 out_*/
-.venv
+venv/
+.venv/
 __pycache__
