@@ -7,7 +7,7 @@ from pdbfixer import PDBFixer
 from utils.openbabel_charge import get_charges
 from utils.utils import _formatIndex, writeFooter, PDBwrite_all,deletePcap
 import mdtraj
-import subprocess
+
 
 def prep_complex(pdb_in,list_of_molecules_to_remove,lig_name,
                  solvate,protein_force_field,water_force_field,
