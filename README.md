@@ -22,7 +22,7 @@ usage: simulate.py [-h] [-p PROTEIN] [-l LIGAND] [-o OUTPUT] [-s STEPS]
         [-z STEP_SIZE] [-f FRICTION_COEFF] [-i INTERVAL]
         [-t TEMPERATURE] [--solvate] [--GBIS]
         [--padding PADDING]
-        [--water-model {tip3p,spce,tip4pew,tip5p,swm4ndp}]
+        [--water-model]
         [--positive-ion POSITIVE_ION]
         [--negative-ion NEGATIVE_ION]
         [--ionic-strength IONIC_STRENGTH] [--no-neutralize]
@@ -60,7 +60,7 @@ You can customize the simulation by providing the necessary options. Here are so
 - `--ph`: Specify the pH for the protonation state of the residues.
 - `--restart`: Use the restart files for simulation.
 - `--restart_dir`: Specify the path to the restart files.
-- `--clock`: Run the simulation based on clock time instead of steps wich can be a good option when running on clusters. You need to take into account time for system creation, minimization and equilibration since the clock argument only applies to the simulation.
+- `--clock`: Run the simulation based on clock time instead of steps, which can be a good option when running on clusters. You need to take into account time for system creation, minimization and equilibration since the clock argument only applies to the simulation.
 
 By default, EasyMD uses the following settings:
 - Protein: No default
@@ -93,11 +93,11 @@ Feel free to explore and experiment with different options to suit your needs.
 
 To explore available forcefields, check [here](https://ommprotocol.readthedocs.io/en/latest/forcefields.html).
 
-For now, systems with DNA comming from AlphaFold3 only work with the amber14 forcefield.
+For now, systems with DNA coming from AlphaFold3 only work with the amber14 forcefield.
 
 There are examples provided in the `examples` folder to setup a simulation.
 
-#### Here is a basic example for explicit solvent simulation which will run for 60 minutes:
+#### Here is a basic example for an explicit solvent simulation, which will run for 60 minutes:
 ```bash
 python3 simulate.py -p p33.pdb -o p33_explicit --solvate --clock 60
 ```
@@ -113,11 +113,11 @@ Solvated simulations are made with a PME periodic system using an NPT ensemble.
 
 Implicit solvent simulations use a generalized Born based implicit solvent.
 
-Ligands charges are calculated using openbabel's python api. Forces for ligands are calculated using the openff-2.2.0 forcefield.
+Ligand charges are calculated using openbabel's python api. Forces for ligands are calculated using the openff-2.2.0 forcefield.
 
 ## Roadmap
 
-- [ ] Add an analysing tool for trajectory analysis
+- [ ] Add an analysis tool for trajectory
 - [ ] Add simulated annealing simulations
 
 See the [open issues](https://github.com/JacobCote/EasyMD/issues) for a full list of proposed features (and known issues).
