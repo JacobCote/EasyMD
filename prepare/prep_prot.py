@@ -1,14 +1,10 @@
-from openff.toolkit import Molecule
 from openmmforcefields.generators import SystemGenerator
 from openmm import app, unit
 from openmm.app import PDBFile, Modeller
-from openff.toolkit import  Molecule
 from pdbfixer import PDBFixer
-from utils.openbabel_charge import get_charges
 from utils.utils import _formatIndex, writeFooter, PDBwrite_all,deletePcap
 import mdtraj
-import subprocess
-import xml.etree.ElementTree as ET
+
 
 
 
