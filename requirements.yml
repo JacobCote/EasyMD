@@ -5,19 +5,19 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - mdtraj=1.10.0=py312haca1622_0
-  - numpy=1.26.4=py312h8442bc7_0
-  - openbabel=3.1.1=py312h2eeb2e4_9
-  - openff-amber-ff-ports=0.0.4=pyhca7485f_0
-  - openff-forcefields=2024.04.0=pyhca7485f_0
-  - openff-interchange=0.3.27=pyhd8ed1ab_0
-  - openff-interchange-base=0.3.27=pyhd8ed1ab_0
-  - openff-models=0.1.2=pyhca7485f_0
-  - openff-toolkit=0.16.1=pyhd8ed1ab_0
-  - openff-toolkit-base=0.16.1=pyhd8ed1ab_0
-  - openff-units=0.2.2=pyhca7485f_0
-  - openff-utilities=0.1.12=pyhd8ed1ab_0
-  - openmm=8.1.1=py312h1212a6f_1_khronos
-  - openmmforcefields=0.13.0=pyhd8ed1ab_0
-  - pandas=2.2.2=py312hd77ebd4_0
-  - pdbfixer=1.9=pyh1a96a4e_0
+  - mdtraj=1.10.0
+  - numpy=1.26.4
+  - openbabel=3.1.1
+  - openff-amber-ff-ports=0.0.4
+  - openff-forcefields=2024.04.0
+  - openff-interchange=0.3.27
+  - openff-interchange-base=0.3.27
+  - openff-models=0.1.2
+  - openff-toolkit=0.16.1
+  - openff-toolkit-base=0.16.1
+  - openff-units=0.2.2
+  - openff-utilities=0.1.12
+  - openmm=8.1.1
+  - openmmforcefields=0.13.0
+  - pandas=2.2.2
+  - pdbfixer=1.9

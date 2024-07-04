@@ -15,9 +15,9 @@ max_restart=3
 # restart number
 restart=0
 # simulation time (for each restart)
-sim_time=60
-# simulation time  = sim_time * max_restart + sim_time 
-# = 60 * 3 + 60 = 240
+sim_time=200
+# simulation time  = sim_time * max_restart + sim_time. This setup is made for running on a cluster with a time limit of 4 hours
+#  200 * 3 + 200 = 800 mins of calculation time split into 4 ish hours block
 
 source venv/bin/activate
 

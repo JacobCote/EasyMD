@@ -3,23 +3,16 @@
 Welcome to EasyMD, a Python package for simulating complex molecular systems using OpenMM. With EasyMD, you can easily perform molecular dynamics simulations and explore the behavior of biomolecules in different environments.
 
 With EasyMD, you can easily create explicit or implicit solvent simulations. EasyMD can also simulate protein-ligand complexes and protein-DNA complexes from a pdb file.
+
+For more info on EasyMD see [here](#more-info-on-easymd-simulations)
 ## Installation
 To install EasyMD, simply run the following command:
 ```bash
 git clone https://github.com/JacobCote/EasyMD.git
-conda create --name MdEnv --file requirements.txt
+conda env create -f requirements.txt
 conda activate MdEnv
-# if needed, install openmm for specific cuda version
-conda install -c conda-forge openmm cudatoolkit=11.4
-```
-or with pip
-```bash
-git clone https://github.com/JacobCote/EasyMD.git
-cd EasyMD
-python -m venv .venv
-source  .venv/bin/source
-pip install -r requirements.txt
-
+# if needed, install openmm with a specific cuda version
+conda install -c conda-forge openmm cudatoolkit=11.8
 ```
 
 ## Usage
@@ -112,6 +105,15 @@ At the end of the 60 minutes, a restart setup file will be created. It is possib
 ```bash
 python3 simulate.py --restart  -restart_dir p33_explicit --clock 60
 ```
+
+## More info on EasyMD simulations
+EasyMD will automatically build a system and run the simulation based on the options provided. Protonation states of amino acids will be determined from the ph of the system. Disulfide bonds will be predicted based on proximity and orientation of Cys residus.
+
+Solvated simulations are made with a PME periodic system using an NPT ensemble. 
+
+Implicit solvent simulations use a generalized Born based implicit solvent.
+
+Ligands charges are calculated using openbabel's python api. Forces for ligands are calculated using the openff-2.2.0 forcefield.
 
 ## Roadmap
 
