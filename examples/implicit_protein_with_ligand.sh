@@ -8,7 +8,7 @@
 
 
 module load StdEnv/2020
-module load cuda/11.4
+module load cuda/11.8
 module load intel/2020.1.217
 # number of restarts before exiting
 max_restart=3

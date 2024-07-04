@@ -35,7 +35,7 @@ usage: simulate.py [-h] [-p PROTEIN] [-l LIGAND] [-o OUTPUT] [-s STEPS]
         [-e EQUILIBRATION_STEPS]
         [--protein-force-field PROTEIN_FORCE_FIELD]
         [--ligand-force-field LIGAND_FORCE_FIELD]
-        [--water-force-field WATER_FORCE_FIELD] [--CUDA]
+        [--water-force-field WATER_FORCE_FIELD]
         [--remove [REMOVE ...]] [--ph PH] [--restart]
         [--restart_dir RESTART_DIR] [--clock CLOCK]
 ```
@@ -62,8 +62,7 @@ You can customize the simulation by providing the necessary options. Here are so
 - `--protein-force-field`: Specify the protein force field.
 - `--ligand-force-field`: Specify the ligand force field.
 - `--water-force-field`: Specify the water force field.
-- `--CUDA`: Use the CUDA platform for simulation.
-- `--remove`: Specify the molecules to remove from the system.
+- `--remove`: Specify molecules to remove from the system.
 - `--ph`: Specify the pH for the protonation state of the residues.
 - `--restart`: Use the restart files for simulation.
 - `--restart_dir`: Specify the path to the restart files.
@@ -87,10 +86,9 @@ By default, EasyMD uses the following settings:
 - Ionic strength: `0.0`
 - Neutralize: `True`
 - Equilibration steps: `200`
-- Protein force field: `amber/ff14SB.xml`
+- Protein force field: `amber14-all.xml`
 - Ligand force field: `openff-2.2.0` (take note that GAFF forcefield is not available at this time. See https://github.com/openmm/openmmforcefields/releases/tag/0.13.0  )
 - Water force field: `tip3p`
-- CUDA: `False`
 - Remove: `['DMS']`
 - pH: `7.0`
 - Restart: `False`
@@ -99,17 +97,17 @@ By default, EasyMD uses the following settings:
 
 Feel free to explore and experiment with different options to suit your needs.
 
+To explore available forcefields, check [here](https://ommprotocol.readthedocs.io/en/latest/forcefields.html)
+
+For now, systems with DNA comming from AlphaFold3 only work with the amber14 forcefield
+
 There are examples provided in the `examples` folder to setup a simulation.
 
 ## Roadmap
 
-- [ ] Add examples in examples folder 
-  - [ ] Solvated
-  - [ ] Implicit
-  - [ ] Restart
-- [ ] Add Changelog
 - [ ] Add an analysing tool for trajectory analysis
 - [ ] Add simulated annealing simulations
+
 See the [open issues](https://github.com/JacobCote/EasyMD/issues) for a full list of proposed features (and known issues).
 
 ## Contributing
@@ -119,7 +117,7 @@ If you would like to contribute to EasyMD, please fork the repository and submit
 EasyMD is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
 ## Contact
-If you have any questions or suggestions, feel free to open an issue or contact me at jacobcote@example.com.
+If you have any questions or suggestions, feel free to open an issue or contact me at jacobcote@ulaval.ca.
 
 
 

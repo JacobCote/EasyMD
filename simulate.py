@@ -39,10 +39,9 @@ parser.add_argument("-e", "--equilibration-steps", type=int, default=200, help="
 parser.add_argument("--protein-force-field", default='amber14-all.xml', help="Protein force field")
 parser.add_argument("--ligand-force-field", default='openff-2.2.0', help="Ligand force field")
 parser.add_argument("--water-force-field", default='amber/tip3p_standard.xml', help="Water force field")
-parser.add_argument("--CUDA", action='store_true', help="Use CUDA platform")
 parser.add_argument('--remove', nargs='*', help='Space separated molecules name to remove ex: --remove DMS LIG CA MG ... ', required=False, default=['DMS'])
 parser.add_argument('--ph', type=float, help='Ph for the protonation state of the residus', required=False, default=7.0)
-parser.add_argument("--restart", action='store_true', help="Use CUDA platform",default=False)
+parser.add_argument("--restart", action='store_true', help="Use the program in restart mode.",default=False)
 parser.add_argument("--restart_dir",type=str, help="path to the restart files", required=False, default='None')
 parser.add_argument('--clock', type=float, help='Run the simulation based on clock time in minutes instead of steps.', required=False, default=None)
 
@@ -194,10 +193,7 @@ else:
 
 simulation = Simulation(modeller.topology, system, integrator)
 
-'''
-if args.CUDA:
-    simulation = Simulation(modeller.topology, system, integrator, platform='CUDA')
-'''
+
 context = simulation.context
 context.setPositions(modeller.positions)
 
@@ -222,6 +218,8 @@ if args.solvate:
 else :
     simulation.reporters.append(DCDReporter(out_dir+'/'+output_traj_dcd, reporting_interval))
 simulation.reporters.append(StateDataReporter(sys.stdout, reporting_interval * 5, step=True, potentialEnergy=True, temperature=True))
+#add a reporter for a log file
+simulation.reporters.append(StateDataReporter(out_dir+'/'+'log.txt', reporting_interval, step=True, potentialEnergy=True, temperature=True))
 
 
 
