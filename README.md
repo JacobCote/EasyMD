@@ -1,7 +1,8 @@
 # EasyMD
 
-Welcome to EasyMD, a Python package for simulating complex molecular systems. With EasyMD, you can easily perform molecular dynamics simulations and explore the behavior of biomolecules in different environments.
+Welcome to EasyMD, a Python package for simulating complex molecular systems using OpenMM. With EasyMD, you can easily perform molecular dynamics simulations and explore the behavior of biomolecules in different environments.
 
+With EasyMD, you can easily create explicit or implicit solvent simulations. EasyMD can also simulate protein-ligand complexes and protein-DNA complexes from a pdb file.
 ## Installation
 To install EasyMD, simply run the following command:
 ```bash
