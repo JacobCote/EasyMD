@@ -115,6 +115,7 @@ Implicit solvent simulations use a generalized Born based implicit solvent.
 
 Ligand charges are calculated using openbabel's python api. Forces for ligands are calculated using the openff-2.2.0 forcefield.
 
+EasyMD uses the CUDA toolkit for GPU acceleration if available. 
 ## Roadmap
 
 - [ ] Add an analysis tool for trajectory
