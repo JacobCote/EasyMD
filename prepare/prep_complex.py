@@ -5,6 +5,7 @@ from openmm.app import PDBFile, Modeller
 from openff.toolkit import  Molecule
 from pdbfixer import PDBFixer
 from utils.openbabel_charge import get_charges
+from utils.utils import _formatIndex, writeFooter, PDBwrite_all,deletePcap
 import mdtraj
 import subprocess
 
@@ -46,10 +47,8 @@ def prep_complex(pdb_in,list_of_molecules_to_remove,lig_name,
                 print('Deleting', res)
         modeller.delete(toDelete)
     print('After remove water, System has %d atoms' % modeller.topology.getNumAtoms())
-
-
-    with open(outdir+'/'+'prot_receptor.pdb', 'w') as outfile:
-        PDBFile.writeFile(modeller.topology, modeller.positions, file=outfile, keepIds=True)
+    
+    PDBwrite_all(modeller, outdir+'/'+'prot_receptor.pdb')
 
 
     print('Done')
@@ -106,13 +105,14 @@ def prep_complex(pdb_in,list_of_molecules_to_remove,lig_name,
         filedata = file.read() 
         filedata = filedata.replace('UNK',lig_name)
         
-    with open(outdir+'/'+'complex.pdb', 'w') as file:
-        file.write(filedata)
+    PDBwrite_all(modeller, outdir+'/'+'complex.pdb')
+
         
     
     
     if solvate:
         print('generating system with solvent...')
+        modeller = deletePcap(modeller)
        
         system_generator = SystemGenerator(
         forcefields=[protein_force_field, water_force_field],
@@ -137,9 +137,12 @@ def prep_complex(pdb_in,list_of_molecules_to_remove,lig_name,
     
     
     else :
-        
+        #loading the pdb pdb file with mdtraj not forcing me to have a periodic system ???
         pdb = mdtraj.load(outdir+'/'+'complex.pdb')
-        topology = pdb.topology.to_openmm()
+        modeller = Modeller(pdb.topology.to_openmm(), pdb.xyz[0])
+        # remove pcap from adn
+        modeller = deletePcap(modeller)
+        
         print('generating system without solvent...')
         system_generator = SystemGenerator(
         forcefields=['amber14-all.xml', 'amber14/tip3pfb.xml', 'implicit/gbn2.xml'],
@@ -148,10 +151,10 @@ def prep_complex(pdb_in,list_of_molecules_to_remove,lig_name,
         forcefield_kwargs=forcefield_kwargs,
         nonperiodic_forcefield_kwargs={'nonbondedMethod': app.NoCutoff}
         )
-        system = system_generator.create_system(topology, molecules=ligand_mol)
+        system = system_generator.create_system(modeller.topology, molecules=ligand_mol)
         
     # write to pdb modeller as restart_model.pdb
-    with open(outdir+'/'+'restart_model.pdb', 'w') as outfile:
-        PDBFile.writeFile(modeller.topology, modeller.positions, outfile)
     
+    PDBwrite_all(modeller, outdir+'/'+'restart_model.pdb')
+   
     return modeller, system

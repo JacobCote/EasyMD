@@ -5,8 +5,11 @@ from openmm.app import PDBFile, Modeller
 from openff.toolkit import  Molecule
 from pdbfixer import PDBFixer
 from utils.openbabel_charge import get_charges
+from utils.utils import _formatIndex, writeFooter, PDBwrite_all,deletePcap
 import mdtraj
 import subprocess
+import xml.etree.ElementTree as ET
+
 
 
 def prep_prot(pdb_in,list_of_molecules_to_remove,
@@ -47,29 +50,18 @@ def prep_prot(pdb_in,list_of_molecules_to_remove,
                 print('Deleting', res)
         modeller.delete(toDelete)
     print('After remove water, System has %d atoms' % modeller.topology.getNumAtoms())
-
-
-    with open(outdir+'/'+'prot_receptor.pdb', 'w') as outfile:
-        PDBFile.writeFile(modeller.topology, modeller.positions, file=outfile, keepIds=True)
-
+    
+    PDBwrite_all(modeller, outdir+'/'+'prot_receptor.pdb')
 
     print('Done')
 
-        
-    # calculate charges with openbabel adn export as sdf file
-    
-    
-    # load the ligand and the protein
-    protein_pdb = PDBFile(outdir+'/'+'prot_receptor.pdb')
-
-
-
     # The topology is described in the openforcefield API
-    modeller = Modeller(protein_pdb.topology, protein_pdb.positions)
+    #modeller = Modeller(protein_pdb.topology, protein_pdb.positions)
     print('System has %d atoms' % modeller.topology.getNumAtoms())
     
     
     if solvate:
+        modeller = deletePcap(modeller)
         print('generating system with solvent...')
        
         system_generator = SystemGenerator(
@@ -93,9 +85,13 @@ def prep_prot(pdb_in,list_of_molecules_to_remove,
     
     
     else :
-        # loadin the complex pdb file with mdtraj not forcing me to have a periodic system ???
-        pdb = mdtraj.load(outdir+'/'+'complex.pdb')
-        topology = pdb.topology.to_openmm()
+        # loading the pdb pdb file with mdtraj not forcing me to have a periodic system ???
+        pdb = mdtraj.load(outdir+'/'+'prot_receptor.pdb')
+        modeller = Modeller(pdb.topology.to_openmm(), pdb.xyz[0])
+        modeller = deletePcap(modeller)
+        topology = modeller.topology
+        
+        #topology = pdb.topology.to_openmm()
         print('generating system without solvent...')
         system_generator = SystemGenerator(
         forcefields=['amber14-all.xml', 'amber14/tip3pfb.xml', 'implicit/gbn2.xml'],
@@ -105,7 +101,8 @@ def prep_prot(pdb_in,list_of_molecules_to_remove,
         system = system_generator.create_system(topology)
         
     # write to pdb modeller as restart_model.pdb
-    with open(outdir+'/'+'restart_model.pdb', 'w') as outfile:
-        PDBFile.writeFile(modeller.topology, modeller.positions, outfile)
+   
+    PDBwrite_all(modeller, outdir+'/'+'restart_model.pdb')
+    
     
     return modeller, system

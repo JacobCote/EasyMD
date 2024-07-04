@@ -1,7 +1,3 @@
-"""
-Run a MD simulation for a complex, optionally adding a solvent box
-"""
-
 import sys, time, argparse
 import os
 import yaml
@@ -23,14 +19,14 @@ parser = argparse.ArgumentParser(description="Simulate", formatter_class=argpars
 
 parser.add_argument("-p", "--protein", required=False, help="Protein PDB file")
 parser.add_argument("-l", "--ligand", required=False, help="Ligand name in pdb file (often LIG, check your pdb file to be sure of the name)")
-parser.add_argument("-o", "--output", default='output', help="Base name for output files")
+parser.add_argument("-o", "--output", default=None, help="Name of an output directory")
 parser.add_argument("-s", "--steps", type=int, default=None, help="Number of steps")
-parser.add_argument("-z", "--step-size", type=float, default=0.002, help="Step size (ps")
+parser.add_argument("-z", "--step-size", type=float, default=0.001, help="Step size (ps")
 parser.add_argument("-f", "--friction-coeff", type=float, default=1, help="Friction coefficient (ps)")
 parser.add_argument("-i", "--interval", type=int, default=1000, help="Reporting interval")
 parser.add_argument("-t", "--temperature", type=int, default=300, help="Temperature (K)")
 parser.add_argument("--solvate", action='store_true', help="Add solvent box")
-parser.add_argument("--GBIS", action='store_true', help="Don't add solvent box, use Born generalize implicit solvent")
+parser.add_argument("--GBIS", action='store_true', help="Doesn't add solvent box, use Born generalize implicit solvent")
 parser.add_argument("--padding", type=float, default=10, help="Padding for solvent box (A)")
 parser.add_argument("--water-model", default="tip3p",
                     choices=["tip3p", "spce", "tip4pew", "tip5p", "swm4ndp"],
@@ -40,7 +36,7 @@ parser.add_argument("--negative-ion", default="Cl-", help="Negative ion for solv
 parser.add_argument("--ionic-strength", type=float, default="0", help="Ionic strength for solvation")
 parser.add_argument("--no-neutralize", action='store_true', help="Don't add ions to neutralize")
 parser.add_argument("-e", "--equilibration-steps", type=int, default=200, help="Number of equilibration steps")
-parser.add_argument("--protein-force-field", default='amber14-all', help="Protein force field")
+parser.add_argument("--protein-force-field", default='amber14-all.xml', help="Protein force field")
 parser.add_argument("--ligand-force-field", default='openff-2.2.0', help="Ligand force field")
 parser.add_argument("--water-force-field", default='amber/tip3p_standard.xml', help="Water force field")
 parser.add_argument("--CUDA", action='store_true', help="Use CUDA platform")
@@ -123,9 +119,9 @@ else:
             i += 1
     else:
         # strip the trailing slash
-        outdir = args.output.rstrip('/')
-        if not os.path.isdir(outdir):
-            os.mkdir(outdir)
+        out_dir = args.output.rstrip('/')
+        if not os.path.isdir(out_dir):
+            os.mkdir(out_dir)
            
 
 
@@ -142,11 +138,9 @@ if args.ligand is None:
     modeller, system = prep_prot(
         pdb_in = pdb_in,
         list_of_molecules_to_remove=args.remove,
-        lig_name=args.ligand,
         solvate=args.solvate,
         protein_force_field=args.protein_force_field,
         water_force_field=args.water_force_field,
-        ligand_force_field=args.ligand_force_field,
         water_model=args.water_model,
         positive_ion=args.positive_ion,
         negative_ion=args.negative_ion,
@@ -154,7 +148,8 @@ if args.ligand is None:
         no_neutralize=args.no_neutralize,
         padding=args.padding,
         ph=args.ph,
-        outdir=out_dir
+        outdir=out_dir,
+        forcefield_kwargs=forcefield_kwargs
     )
     
 else:
@@ -185,7 +180,7 @@ if args.clock is None:
     duration = (step_size * num_steps).value_in_unit(unit.nanoseconds)
     print('Simulating for {} ns'.format(duration))
 
-integrator = LangevinIntegrator(temperature, friction_coeff, step_size)
+integrator = LangevinIntegrator(temperature, friction_coeff, args.step_size * unit.picoseconds)
 
 if args.solvate:
     system.addForce(openmm.MonteCarloBarostat(1 * unit.atmospheres, temperature, 25))
@@ -223,7 +218,7 @@ simulation.step(equilibration_steps)
 # Run the simulation.
 # check for name 
 if args.solvate:
-    simulation.reporters.append(DCDReporter(out_dir+'/'+output_traj_dcd, reporting_interval, enforcePeriodicBox=True))
+    simulation.reporters.append(DCDReporter(out_dir+'/'+output_traj_dcd, reporting_interval, enforcePeriodicBox=False))
 else :
     simulation.reporters.append(DCDReporter(out_dir+'/'+output_traj_dcd, reporting_interval))
 simulation.reporters.append(StateDataReporter(sys.stdout, reporting_interval * 5, step=True, potentialEnergy=True, temperature=True))
@@ -233,7 +228,9 @@ simulation.reporters.append(StateDataReporter(sys.stdout, reporting_interval * 5
 # start simulation, either for a number of steps or for a clock time
 if args.clock is not None:
     print('Starting simulation for', args.clock, 'mins ...')
+    t1 = time.time()
     simulation.runForClockTime(args.clock * unit.minute)
+    t2 = time.time()
 else:
     print('Starting simulation with', num_steps, 'steps ...')
     t1 = time.time()

@@ -42,8 +42,10 @@ def prep_restart_ligand(setup: dict,outdir : str, forcefield_kwargs: dict ) -> T
     
     else :
         
+        '''
         pdb = mdtraj.load(outdir+'/'+'complex.pdb')
         topology = pdb.topology.to_openmm()
+        '''
         print('generating system without solvent...')
         system_generator = SystemGenerator(
         forcefields=['amber14-all.xml', 'amber14/tip3pfb.xml', 'implicit/gbn2.xml'],
@@ -52,7 +54,7 @@ def prep_restart_ligand(setup: dict,outdir : str, forcefield_kwargs: dict ) -> T
         forcefield_kwargs=forcefield_kwargs,
         nonperiodic_forcefield_kwargs={'nonbondedMethod': app.NoCutoff}
         )
-        system = system_generator.create_system(topology, molecules=ligand_mol)
+        system = system_generator.create_system(modeller.topology, molecules=ligand_mol)
     
     return modeller, system
 
@@ -87,7 +89,7 @@ def prep_restart(setup: dict,outdir : str, forcefield_kwargs: dict ) -> Tuple[Mo
     
     else :
         
-        pdb = mdtraj.load(outdir+'/'+'complex.pdb')
+        pdb = mdtraj.load(outdir+'/'+'restart_model.pdb')
         topology = pdb.topology.to_openmm()
         print('generating system without solvent...')
         system_generator = SystemGenerator(
@@ -134,7 +136,7 @@ def restart_simulation(system, modeller,restart_dir, setup,  clock=None, step=No
     simulation = Simulation(modeller.topology, system, integrator, state=out_dir+'/'+'last_state.xml')  
     #simulation = Simulation(modeller.topology, system, integrator, platform=platform, state=out_dir+'/'+'last_state.xml')  
      
-    simulation.reporters.append(DCDReporter(out_dir+'/'+f'output_traj_{last_state+1}.dcd', reporting_interval))
+    simulation.reporters.append(DCDReporter(out_dir+'/'+f'output_traj_{last_state+1}.dcd', reporting_interval, enforcePeriodicBox=False))
     simulation.reporters.append(StateDataReporter(sys.stdout, reporting_interval * 5, step=True, potentialEnergy=True, temperature=True))
     
     if clock is not None:
@@ -157,13 +159,12 @@ def restart_simulation(system, modeller,restart_dir, setup,  clock=None, step=No
     step_s = step_size * unit.picoseconds
     n_step = simulation.context.getStepCount()
     duration = (n_step * step_s).value_in_unit(unit.nanoseconds)
-    print('Simulation complete in {} mins at {}. Total wall clock time was {} mins'.format(
+    print('Simulation complete in {} mins at {}.'.format(
     round((t2 - t1) / 60, 3), temperature,'K'))
     print('Simulation time was', round(duration, 3), 'ns')
     print('Updating last state in restart_setup.yml ...')
     setup['last_state'] = last_state + 1
     yaml.dump(setup, open(out_dir+'/'+'restart_setup.yml', 'w'), default_flow_style=False)
-    
     print('Exiting ...')
     exit(0)
 

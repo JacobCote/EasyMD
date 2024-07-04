@@ -8,6 +8,8 @@ To install EasyMD, simply run the following command:
 git clone https://github.com/JacobCote/EasyMD.git
 conda create --name MdEnv --file requirements.txt
 conda activate MdEnv
+# if needed, install openmm for specific cuda version
+conda install -c conda-forge openmm cudatoolkit=11.4
 ```
 or with pip
 ```bash
@@ -16,6 +18,7 @@ cd EasyMD
 python -m venv .venv
 source  .venv/bin/source
 pip install -r requirements.txt
+
 ```
 
 ## Usage
