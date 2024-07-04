@@ -97,11 +97,20 @@ By default, EasyMD uses the following settings:
 
 Feel free to explore and experiment with different options to suit your needs.
 
-To explore available forcefields, check [here](https://ommprotocol.readthedocs.io/en/latest/forcefields.html)
+To explore available forcefields, check [here](https://ommprotocol.readthedocs.io/en/latest/forcefields.html).
 
-For now, systems with DNA comming from AlphaFold3 only work with the amber14 forcefield
+For now, systems with DNA comming from AlphaFold3 only work with the amber14 forcefield.
 
 There are examples provided in the `examples` folder to setup a simulation.
+
+Here is a basic example for explicit solvent simulation which will run for 60 minutes:
+```bash
+python3 simulate.py -p p33.pdb -o p33_explicit --solvate --clock 60
+```
+At the end of the 60 minutes, a restart setup file will be created. It is possible to restart the simulation for 60 minutes from the last state by specifying the output directory of the initial simulation:
+```bash
+python3 simulate.py --restart  -restart_dir p33_explicit --clock 60
+```
 
 ## Roadmap
 
