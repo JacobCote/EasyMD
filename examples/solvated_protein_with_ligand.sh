@@ -6,13 +6,15 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --account=<def_somesposor>
 
+# you need to move this script and restart.sh to the root directory of the project
+
 module load StdEnv/2020
 module load cuda/11.8
 module load intel/2020.1.217
 
 
 # you may need to conda init if on a cluster
-conda init
+conda init bash
 conda activate mdEnv
 
 # number of restarts before exiting
@@ -26,9 +28,9 @@ sim_time=60
 
 source venv/bin/activate
 
-python3 simulate.py -p test.pdb -l ATP --solvate --output ATP_explicit --clock $sim_time 
+python3 simulate.py -p test.pdb -l GNP --solvate --output test_explicit --clock $sim_time 
 
 # restart the simulation if restarts is less than max_restart
 if [ $restarts -lt $max_restart ]; then
-    bash restart.sh ATP_explicit $sim_time $(($restarts+1)) $max_restart
+    bash restart.sh test_explicit $sim_time $(($restarts+1)) $max_restart
 fi

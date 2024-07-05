@@ -200,7 +200,7 @@ context.setPositions(modeller.positions)
 
 
 print('Minimising ...')
-simulation.minimizeEnergy(maxIterations=100)
+simulation.minimizeEnergy(maxIterations=10000)
 
 # Write out the minimised PDB.
 with open(out_dir+'/'+'minimised.pdb', 'w') as outfile:

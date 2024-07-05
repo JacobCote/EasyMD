@@ -13,7 +13,7 @@ module load cuda/11.8
 module load intel/2020.1.217
 
 # you may need to conda init if on a cluster
-conda init
+conda init bash
 conda activate mdEnv
 
 restart_dir=$1

@@ -96,11 +96,11 @@ To explore available forcefields, check [here](https://ommprotocol.readthedocs.i
 
 For now, systems with DNA coming from AlphaFold3 only work with the amber14 forcefield.
 
-There are examples provided in the `examples` folder to setup a simulation.
+There are examples provided in the `examples` folder to setup a simulation on clusters (you need to move the scripts to the root directory of EasyMD).
 
 #### Here is a basic example for an explicit solvent simulation, which will run for 60 minutes:
 ```bash
-python3 simulate.py -p p33.pdb -o p33_explicit --solvate --clock 60
+python3 simulate.py --protein test.pdb --ligand GNP -o p33_explicit --solvate --clock 60
 ```
 At the end of the 60 minutes, a restart setup file will be created. It is possible to restart the simulation for 60 minutes from the last state by specifying the output directory of the initial simulation:
 ```bash
@@ -122,6 +122,8 @@ EasyMD uses the CUDA toolkit for GPU acceleration if available.
 - [ ] Add an analysis tool for trajectory
 - [ ] Add simulated annealing simulations
 - [ ] Add possibility to install via pip
+- [ ] Add support for multiple DNA chains
+- [ ] add support for multiple ligands 
 
 See the [open issues](https://github.com/JacobCote/EasyMD/issues) for a full list of proposed features (and known issues).
 
