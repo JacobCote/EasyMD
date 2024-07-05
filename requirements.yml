@@ -21,3 +21,4 @@ dependencies:
   - openmmforcefields=0.13.0
   - pandas=2.2.2
   - pdbfixer=1.9
+  - yaml

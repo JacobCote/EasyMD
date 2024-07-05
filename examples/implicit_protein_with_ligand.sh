@@ -17,17 +17,18 @@ conda activate mdEnv
 # number of restarts before exiting
 max_restart=3
 # restart number
-restart=0
+restarts=0
 # simulation time (for each restart)
 sim_time=200
+
+outdir=test_implicit
 # simulation time  = sim_time * max_restart + sim_time. This setup is made for running on a cluster with a time limit of 4 hours
 #  200 * 3 + 200 = 800 mins of calculation time split into 4 ish hours block
 
-source venv/bin/activate
-
-python3 simulate.py -p test.pdb -l ATP --GBIS --output ATP_implicit --clock $sim_time --remove MG
+# here we also remove MG ions from the simulation because of implicit solvent
+python3 simulate.py -p test.pdb -l GTP --GBIS --output $outdir --clock $sim_time --remove MG
 
 # restart the simulation if restarts is less than max_restart
 if [ $restarts -lt $max_restart ]; then
-    bash restart.sh ATP_explicit $sim_time $(($restarts+1)) $max_restart
+    bash restart.sh $outdir $sim_time $(($restarts+1)) $max_restart
 fi
