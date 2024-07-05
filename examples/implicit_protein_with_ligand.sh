@@ -10,6 +10,10 @@
 module load StdEnv/2020
 module load cuda/11.8
 module load intel/2020.1.217
+
+# you may need to conda init if on a cluster
+conda init
+conda activate mdEnv
 # number of restarts before exiting
 max_restart=3
 # restart number

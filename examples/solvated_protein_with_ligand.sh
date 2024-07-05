@@ -10,6 +10,11 @@ module load StdEnv/2020
 module load cuda/11.8
 module load intel/2020.1.217
 
+
+# you may need to conda init if on a cluster
+conda init
+conda activate mdEnv
+
 # number of restarts before exiting
 max_restart=3
 # restart number
@@ -23,4 +28,7 @@ source venv/bin/activate
 
 python3 simulate.py -p test.pdb -l ATP --solvate --output ATP_explicit --clock $sim_time 
 
-bash restart.sh ATP_explicit $sim_time $restarts $max_restart
+# restart the simulation if restarts is less than max_restart
+if [ $restarts -lt $max_restart ]; then
+    bash restart.sh ATP_explicit $sim_time $(($restarts+1)) $max_restart
+fi

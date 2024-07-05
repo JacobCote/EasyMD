@@ -9,7 +9,8 @@ For more info on EasyMD see [here](#more-info-on-easymd-simulations)
 To install EasyMD, simply run the following command:
 ```bash
 git clone https://github.com/JacobCote/EasyMD.git
-conda env create -f requirements.txt
+cd EasyMD
+conda env create -f requirements.yml
 conda activate MdEnv
 # if needed, install openmm with a specific cuda version
 conda install -c conda-forge openmm cudatoolkit=11.8
@@ -120,6 +121,7 @@ EasyMD uses the CUDA toolkit for GPU acceleration if available.
 
 - [ ] Add an analysis tool for trajectory
 - [ ] Add simulated annealing simulations
+- [ ] Add possibility to install via pip
 
 See the [open issues](https://github.com/JacobCote/EasyMD/issues) for a full list of proposed features (and known issues).
 
