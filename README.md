@@ -100,11 +100,11 @@ There are examples provided in the `examples` folder to setup a simulation on cl
 
 #### Here is a basic example for an explicit solvent simulation, which will run for 60 minutes:
 ```bash
-python3 simulate.py --protein test.pdb --ligand GNP -o p33_explicit --solvate --clock 60
+python3 simulate.py --protein test.pdb --ligand GNP -o test_explicit --solvate --clock 60
 ```
 At the end of the 60 minutes, a restart setup file will be created. It is possible to restart the simulation for 60 minutes from the last state by specifying the output directory of the initial simulation:
 ```bash
-python3 simulate.py --restart  -restart_dir p33_explicit --clock 60
+python3 simulate.py --restart  -restart_dir test_explicit --clock 60
 ```
 
 ## More info on EasyMD simulations
