@@ -25,6 +25,9 @@ sim_time=200
 
 source venv/bin/activate
 
-python3 simulate.py -p test.pdb -l ATP --GBIS --output ATP_implicit --clock $sim_time 
+python3 simulate.py -p test.pdb -l ATP --GBIS --output ATP_implicit --clock $sim_time --remove MG
 
-bash restart.sh ATP_imnplicit $sim_time $restart $max_restart
+# restart the simulation if restarts is less than max_restart
+if [ $restarts -lt $max_restart ]; then
+    bash restart.sh ATP_explicit $sim_time $(($restarts+1)) $max_restart
+fi
