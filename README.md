@@ -6,7 +6,7 @@ With EasyMD, you can easily create explicit or implicit solvent simulations. Eas
 
 For more info on EasyMD see [here](#more-info-on-easymd-simulations)
 ## Installation
-To install EasyMD, simply run the following command:
+To install EasyMD, simply run the following commands:
 ```bash
 git clone https://github.com/JacobCote/EasyMD.git
 cd EasyMD
