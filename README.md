@@ -65,7 +65,7 @@ You can customize the simulation by providing the necessary options. Here are so
 
 By default, EasyMD uses the following settings:
 - Protein: No default
-- Ligand: No default
+- Ligand: `None`
 - Output: `out_X`
 - Steps: `10000`
 - Step size: `2.0`
