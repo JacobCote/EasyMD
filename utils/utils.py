@@ -4,7 +4,7 @@ from openff.units import Quantity, unit
 from openmm import unit as openmm_unit
 from openff.toolkit import ForceField, Molecule, Topology
 import numpy as np
-from openmm.app import PDBFile
+from openmm.app import PDBFile, Modeller
 
 def get_platform():
     os_platform = os.getenv('PLATFORM')
@@ -180,20 +180,22 @@ def PDBwrite_all(modeller, filename):
 
 def deletePcap(modeller):
     toDelete = []
+    chains = set()
     for res in modeller.topology.residues():
         if res.name in ['DC','DT','DA','DG']:
+            chains.add(res.chain)
+
+
+    for res in modeller.topology.residues():
+        if res.chain in chains: 
+            chains.remove(res.chain)
             for atom in res.atoms():
                 if atom.name in {'OP3', 'OP1', 'OP2', 'P'}:
                     toDelete.append(atom)
                     print('Deleting PCAP : ', atom)
-            break
     modeller.delete(toDelete)
     return modeller
 
-
-    
-         
-    
-   
+                        
 
 
