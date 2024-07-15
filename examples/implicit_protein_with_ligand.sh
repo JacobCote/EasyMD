@@ -32,5 +32,5 @@ python3 simulate.py -p test.pdb -l GNP --GBIS --output $outdir --clock $sim_time
 
 # restart the simulation if restarts is less than max_restart
 if [ $restarts -lt $max_restart ]; then
-    bash restart.sh $outdir $sim_time $(($restarts+1)) $max_restart
+    sbatch restart.sh $outdir $sim_time $(($restarts+1)) $max_restart
 fi

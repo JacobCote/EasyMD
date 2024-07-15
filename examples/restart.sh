@@ -27,5 +27,5 @@ python3 simulate.py --restart --restart_dir $restart_dir --clock $clock
 
 # if restarts is less than max_restart, restart the simulation 
 if [ $restarts -lt $max_restart ]; then
-    bash restart.sh $restart_dir $clock $(($restarts+1)) $max_restart
+    sbatch restart.sh $restart_dir $clock $(($restarts+1)) $max_restart
 fi
