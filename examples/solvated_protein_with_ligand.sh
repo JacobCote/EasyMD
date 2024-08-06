@@ -22,7 +22,7 @@ max_restart=3
 # restart number
 restarts=0
 # simulation time (for each restart)
-sim_time=60
+sim_time=200
 # simulation time  = sim_time * max_restart + sim_time 
 # = 60 * 3 + 60 = 240 mins
 
@@ -32,5 +32,5 @@ python3 simulate.py -p test.pdb -l GNP --solvate --output test_explicit --clock 
 
 # restart the simulation if restarts is less than max_restart
 if [ $restarts -lt $max_restart ]; then
-    sbatch restart.sh test_explicit $sim_time $(($restarts+1)) $max_restart
+    bash restart.sh test_explicit $sim_time $(($restarts+1)) $max_restart
 fi

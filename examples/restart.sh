@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --cpus-per-task=4
-#SBATCH --mem 8024
+#SBATCH --cpus-per-task=1
+#SBATCH --mem 4012
 #SBATCH -o slurm.%N.%j.out      # STDOUT
 #SBATCH -t 4:00:00              # time (D-HH:MM)
 #SBATCH --gpus-per-node=1
@@ -27,5 +27,5 @@ python3 simulate.py --restart --restart_dir $restart_dir --clock $clock
 
 # if restarts is less than max_restart, restart the simulation 
 if [ $restarts -lt $max_restart ]; then
-    sbatch restart.sh $restart_dir $clock $(($restarts+1)) $max_restart
+    bash restart.sh $restart_dir $clock $(($restarts+1)) $max_restart
 fi
