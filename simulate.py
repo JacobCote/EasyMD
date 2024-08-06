@@ -9,6 +9,7 @@ import utils.utils as utils
 from prepare.prep_complex import prep_complex
 from prepare.prep_prot import prep_prot
 from restart.restart import prep_restart_ligand,restart_simulation,prep_restart
+import pickle
 
 
 
@@ -250,6 +251,12 @@ PDBFile.writeFile(simulation.topology, positions, open(out_dir+'/'+'last_state.p
 print('Simulation complete in {} mins at {}. Total wall clock time was {} mins'.format(
     round((t2 - t1) / 60, 3), temperature, round((t2 - t0) / 60, 3)))
 print('Simulation time was', round(duration, 3), 'ns')
+
+# save openmm topology
+print('Writting topology file !!!')
+filename = out_dir+'/topology.pkl'
+with open(filename, 'wb')  as f :
+    pickle.dump(simulation.topology,file = f)
 
 
 

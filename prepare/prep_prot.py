@@ -95,6 +95,7 @@ def prep_prot(pdb_in,list_of_molecules_to_remove,
         nonperiodic_forcefield_kwargs={'nonbondedMethod': app.NoCutoff}
         )
         system = system_generator.create_system(topology)
+        print('System crated without solvent')
         
     # write to pdb modeller as restart_model.pdb
    
