@@ -33,6 +33,7 @@ usage: simulate.py [-h] [-p PROTEIN] [-l LIGAND] [-o OUTPUT] [-s STEPS]
         [--water-force-field WATER_FORCE_FIELD]
         [--remove [REMOVE ...]] [--ph PH] [--restart]
         [--restart_dir RESTART_DIR] [--clock CLOCK]
+        [--simulated-annealing]
 ```
 
 You can customize the simulation by providing the necessary options. Here are some of the available options:
@@ -61,6 +62,7 @@ You can customize the simulation by providing the necessary options. Here are so
 - `--ph`: Specify the pH for the protonation state of the residues.
 - `--restart`: Use the restart files for simulation.
 - `--restart_dir`: Specify the path to the restart files.
+- `--simulated-annealing`: starts a simulated annealing simulation.
 - `--clock`: Run the simulation based on clock time instead of steps, which can be a good option when running on clusters. You need to take into account time for system creation, minimization and equilibration since the clock argument only applies to the simulation.
 
 By default, EasyMD uses the following settings:
@@ -89,6 +91,7 @@ By default, EasyMD uses the following settings:
 - Restart: `False`
 - Restart directory: `None`
 - Clock: `False`
+- Simulated annealing: `False`
 
 Feel free to explore and experiment with different options to suit your needs.
 

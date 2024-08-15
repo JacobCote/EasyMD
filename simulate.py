@@ -181,7 +181,7 @@ else:
 
 if args.simulated_annealing:
     simulated_annealing(modeller, system, temperature, out_dir, args.step_size, args.friction_coeff, args.interval, args.equilibration_steps)
-    exit(0)                 
+    exit(0)  
                             
 # Set up the simulation
 friction_coeff = args.friction_coeff / unit.picosecond
