@@ -48,9 +48,9 @@ def simulated_annealing(modeller, system, temperature, out_dir,step_size, fricti
 
 
     ## simulate 
-    for i in range(1000):
+    for i in range(2000):
         
-        integrator.setTemperature(temperature+(0.2*i)* unit.kelvin)
+        integrator.setTemperature(temperature+(0.1*i)* unit.kelvin)
         simulation.step(100)
 
 
