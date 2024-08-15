@@ -78,7 +78,7 @@ By default, EasyMD uses the following settings:
 - Water model: `tip3p`
 - Positive ion: `Na+`
 - Negative ion: `Cl-`
-- Ionic strength: `0.0`
+- Ionic strength: `0.1`
 - Neutralize: `True`
 - Equilibration steps: `200`
 - Protein force field: `amber14-all.xml`
@@ -119,11 +119,11 @@ Ligand charges are calculated using openbabel's python api. Forces for ligands a
 EasyMD uses the CUDA toolkit for GPU acceleration if available. 
 ## Roadmap
 
-- [ ] Add an analysis tool for trajectory
-- [ ] Add simulated annealing simulations
+- [ ] Add an analysis tool documentation
+- [ ] Add simulated annealing documentation
 - [ ] Add possibility to install via pip
-- [ ] Add support for multiple DNA chains
 - [ ] add support for multiple ligands 
+- [ ] Molecular dynamics based ligand docking
 
 See the [open issues](https://github.com/JacobCote/EasyMD/issues) for a full list of proposed features (and known issues).
 

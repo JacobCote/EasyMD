@@ -48,23 +48,3 @@ for i, f in enumerate(files):
     del traj
 
     
-    '''
-
-print('Loading topologies...')
-with open('p33_DNA_in' + '/topology.pkl','rb') as f:
-    topo_openmm = pickle.load(f)
-
-topo = md.Topology.from_openmm(topo_openmm)
-traj = md.load('p33_DNA_in/output_traj_0.dcd', top = topo )
-
-
-res_2_keep = set([a.index for a in traj.topology.residues if not a.is_water ])
-
-atoms_to_keep = [a.index for a in traj.topology.atoms if a.residue.index in res_2_keep  ]
-
-
-for a in  traj.topology.atoms:
-    print(a.residue.index)
-    break
-
-traj.r'''

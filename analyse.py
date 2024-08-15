@@ -71,29 +71,8 @@ if args.rmsf:
     plt.clf()
     
     
-
-
-dir = 'p33_DNA_out/CA-only/'
-files = [i for i in os.listdir(dir) if i.endswith('.dcd')]
-n_dcd = len(files)
-
+# get matrix of distances between centers of mass of all chains
+if args.distances :
+    import mdtraj as md
     
-trajectories = [md.load(dir+'/'+i, top ='p33_DNA_out/CA-only/CA-Only.pdb' ) for i in files]
-md_traj = md.join(trajectories)
-    
-atoms_to_keep = [a.index for a in md_traj.topology.atoms if a.name == 'CA']
-len(atoms_to_keep)
-
-atoms_to_keep_prot = [a.index for a in md_traj.topology.atoms if a.residue.is_protein]
-atoms_to_keep_DNA = [a.index for a in md_traj.topology.atoms if a.residue.name in  {'DA','DT','DG','DC'}]
-
-
-
-rmsd_prot = md.rmsd(md_traj,md_traj,0, atom_indices=atoms_to_keep_prot)
-rmsd_DNA = md.rmsd(md_traj,md_traj,0, atom_indices=atoms_to_keep_DNA)
-
-plt.plot(rmsd_prot,label = 'prot')
-plt.plot(rmsd_DNA,label = 'DNA')
-plt.legend()
-plt.savefig('test.png')
-plt.clf()
+    pass

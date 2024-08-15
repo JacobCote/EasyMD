@@ -2,6 +2,7 @@ import sys, time, argparse
 import os
 import yaml
 import pprint
+import pickle
 import openmm
 from openmm.app import PDBFile, Simulation, StateDataReporter, DCDReporter
 from openmm import app, unit, LangevinIntegrator 
@@ -9,7 +10,8 @@ import utils.utils as utils
 from prepare.prep_complex import prep_complex
 from prepare.prep_prot import prep_prot
 from restart.restart import prep_restart_ligand,restart_simulation,prep_restart
-import pickle
+from utils.simulated_annealing import simulated_annealing
+
 
 
 
@@ -34,7 +36,7 @@ parser.add_argument("--water-model", default="tip3p",
                     help="Water model for solvation")
 parser.add_argument("--positive-ion", default="Na+", help="Positive ion for solvation")
 parser.add_argument("--negative-ion", default="Cl-", help="Negative ion for solvation")
-parser.add_argument("--ionic-strength", type=float, default="0", help="Ionic strength for solvation")
+parser.add_argument("--ionic-strength", type=float, default=0.1, help="Ionic strength for solvation")
 parser.add_argument("--no-neutralize", action='store_true', help="Don't add ions to neutralize")
 parser.add_argument("-e", "--equilibration-steps", type=int, default=200, help="Number of equilibration steps")
 parser.add_argument("--protein-force-field", default='amber14-all.xml', help="Protein force field")
@@ -45,7 +47,7 @@ parser.add_argument('--ph', type=float, help='Ph for the protonation state of th
 parser.add_argument("--restart", action='store_true', help="Use the program in restart mode.",default=False)
 parser.add_argument("--restart_dir",type=str, help="path to the restart files", required=False, default='None')
 parser.add_argument('--clock', type=float, help='Run the simulation based on clock time in minutes instead of steps.', required=False, default=None)
-
+parser.add_argument('--simulated-annealing', action='store_true', help='Run a simulated annealing simulation', required=False, default=False)
 
 args = parser.parse_args()
 print("Simulate with these parameters: ")
@@ -53,21 +55,25 @@ pprint.pprint(vars(args))
 
 
 # parser sanity check
-if args.clock is not None and args.steps is not None:
-    print('Please choose either --steps or --clock')
-    exit(1)
-if args.steps is None and args.clock is None:
-    print('Please provide either --steps or --clock')
-    exit(1)
 
-if (args.solvate + args.GBIS % 2 == 0) and not args.restart :
-    print('Please choose either --solvate or --GBIS')
-    exit(1)
-    
-if args.restart and  args.restart_dir is None:
-    print('Please  directory with the restart files with --restart_dir <RESTARTDIR>')
-    exit(1)
-    
+
+if not args.simulated_annealing :
+
+    if args.clock is not None and args.steps is not None:
+        print('Please choose either --steps or --clock')
+        exit(1)
+    if args.steps is None and args.clock is None:
+        print('Please provide either --steps or --clock')
+        exit(1)
+
+    if (args.solvate + args.GBIS % 2 == 0) and not args.restart :
+        print('Please choose either --solvate or --GBIS')
+        exit(1)
+        
+    if args.restart and  args.restart_dir is None:
+        print('Please  directory with the restart files with --restart_dir <RESTARTDIR>')
+        exit(1)
+        
 # get the chosen or fastest platform
 platform = utils.get_platform()
 
@@ -171,7 +177,11 @@ else:
         outdir=out_dir,
         forcefield_kwargs=forcefield_kwargs
     )
-                            
+
+
+if args.simulated_annealing:
+    simulated_annealing(modeller, system, temperature, out_dir, args.step_size, args.friction_coeff, args.interval, args.equilibration_steps)
+    exit(0)                 
                             
 # Set up the simulation
 friction_coeff = args.friction_coeff / unit.picosecond
@@ -276,6 +286,8 @@ setup_dict = {
     'water_force_field': args.water_force_field,
     'last_state': 0,
 }
+
+
 
 yaml.dump(setup_dict, open(out_dir+'/'+'restart_setup.yml', 'w'), default_flow_style=False)
 
