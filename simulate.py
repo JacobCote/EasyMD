@@ -12,6 +12,8 @@ from prepare.prep_prot import prep_prot
 from restart.restart import prep_restart_ligand,restart_simulation,prep_restart
 from utils.simulated_annealing import simulated_annealing
 
+from argManager import ArgManager
+
 
 
 
@@ -19,6 +21,7 @@ t0 = time.time()
 
 
 parser = argparse.ArgumentParser(description="Simulate", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
 
 parser.add_argument("-p", "--protein", required=False, help="Protein PDB file")
 parser.add_argument("-l", "--ligand", required=False, help="Ligand name in pdb file (often LIG, check your pdb file to be sure of the name)")
