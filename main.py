@@ -35,12 +35,10 @@ def main():
     modeller, system = SysGenerator(config)
 
     ## simulaton prep 
-
-    SimRunner(modeller,system)
-
-
+    sim = SimRunner(config,modeller,system)
 
     ## start sim
+    sim.run()
 
 
 if __name__ == "__main__":
