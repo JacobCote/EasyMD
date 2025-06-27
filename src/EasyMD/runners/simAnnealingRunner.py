@@ -13,8 +13,7 @@ class AnnealingRunner():
         self.step_size = self.config.step_size * unit.picoseconds
       
 
-
-    def simulated_annealing(self,):
+    def run(self,):
                     
         # Set up the simulation
         friction_coeff = friction_coeff / unit.picosecond

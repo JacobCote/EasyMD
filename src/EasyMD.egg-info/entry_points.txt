@@ -1,0 +1,2 @@
+[console_scripts]
+easymd = EasyMD.__main__:main

@@ -1,6 +1,6 @@
-from runners.gbisRunner import GBISRunner
-from runners.simAnnealingRunner import AnnealingRunner
-from runners.solvatedRunner import SolvatedRunner
+from EasyMD.runners.gbisRunner import GBISRunner
+from EasyMD.runners.simAnnealingRunner import AnnealingRunner
+from EasyMD.runners.solvatedRunner import SolvatedRunner
 
 class SimRunner():
     def __init__(self,config,modeller,system):

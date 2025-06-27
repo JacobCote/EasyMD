@@ -10,7 +10,7 @@ import yaml
 import mdtraj
 
 from pdbfixer import PDBFixer
-from utils.utils import _formatIndex, writeFooter, PDBwrite_all,deletePcap
+from EasyMD.utils.utils import _formatIndex, writeFooter, PDBwrite_all,deletePcap
 import mdtraj
 
 

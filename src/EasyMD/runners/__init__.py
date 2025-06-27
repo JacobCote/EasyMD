@@ -1,3 +1,3 @@
-from .simAnnealingRunner import AnnealingRunner
 from .gbisRunner import GBISRunner
+from .simAnnealingRunner import AnnealingRunner
 from .solvatedRunner import SolvatedRunner

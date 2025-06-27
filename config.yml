@@ -1,0 +1,34 @@
+# example config.yml file with default params
+
+protein: null
+ligand: null
+output: null
+steps: null
+step_size: 0.002
+friction_coeff: 1
+interval: 1000
+temperature: 300
+
+solvate: false
+GBIS: false
+padding: 10
+water_model: tip3p
+positive_ion: Na+
+negative_ion: Cl-
+ionic_strength: 0.1
+no_neutralize: false
+
+equilibration_steps: 200
+protein_force_field: amber14-all.xml
+ligand_force_field: openff-2.2.0
+water_force_field: amber/tip3p_standard.xml
+
+remove:
+  - DMS
+ph: 7.0
+
+restart: false
+restart_dir: null
+
+clock: null
+simulated_annealing: false
