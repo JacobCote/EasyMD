@@ -11,23 +11,65 @@ import yaml
 import mdtraj
 
 
-class Restarter():
-    def __init__(self,setup: dict,outdir : str, forcefield_kwargs: dict):
+class Restarter:
+    """
+    Handles restarting molecular dynamics simulations from previously saved states.
+    
+    This class provides functionality to restart MD simulations by loading saved states,
+    topologies, and configurations from previous runs. It supports both protein-only
+    and protein-ligand complex simulations with or without explicit solvent.
+    
+    Attributes:
+        setup (dict): Configuration parameters from the original simulation setup.
+        outdir (str): Output directory containing restart files.
+        forcefield_kwargs (dict): Force field parameters for system generation.
+    
+    Example:
+        >>> setup = {'protein_force_field': 'amber14-all.xml', 'solvate': True}
+        >>> restarter = Restarter(setup, 'restart_dir', {})
+        >>> modeller, system = restarter.prep_restart()
+    """
+    def __init__(self, setup: dict, outdir: str, forcefield_kwargs: dict):
+        """
+        Initialize the Restarter with simulation setup parameters.
+        
+        Args:
+            setup (dict): Configuration parameters from the original simulation including
+                         force field specifications, solvation settings, and simulation parameters.
+            outdir (str): Path to the output directory containing restart files
+                         (restart_model.pdb, ligand.sdf, last_state.xml, etc.).
+            forcefield_kwargs (dict): Force field parameters for system generation.
+                                    Note: This parameter is currently overridden with default values.
+        """
         self.setup = setup
         self.outdir = outdir
-        self.forcefield_kwargs  = {'constraints': app.HBonds, 'rigidWater': True, 'removeCMMotion': False, 'hydrogenMass': 4*unit.amu }
+        self.forcefield_kwargs = {'constraints': app.HBonds, 'rigidWater': True, 'removeCMMotion': False, 'hydrogenMass': 4*unit.amu}
 
 
 
 
-    def prep_restart_ligand(self,) -> Tuple[Modeller, SystemGenerator]:
-        '''
-        prepare system for restart simulation with ligand
-        :param setup: dict, setup parameters for the simulation wich is created when the simulation is started for the first time
-        :param outdir: str, output directory where the restart files are stored
-        :param forcefield_kwargs: dict, forcefield parameters
-        :return: Tuple[Modeller, SystemGenerator], Modeller object and SystemGenerator object
-        '''
+    def prep_restart_ligand(self) -> Tuple[Modeller, SystemGenerator]:
+        """
+        Prepare system for restart simulation with ligand present.
+        
+        This method loads the restart model PDB file and ligand SDF file, then creates
+        a new system with the appropriate force fields for protein-ligand simulations.
+        It handles both solvated and implicit solvent (GBIS) systems.
+        
+        Returns:
+            Tuple[Modeller, SystemGenerator]: A tuple containing:
+                - Modeller: OpenMM Modeller object with topology and positions
+                - SystemGenerator: OpenMM System object with forces and parameters
+        
+        Raises:
+            FileNotFoundError: If restart_model.pdb or ligand.sdf files are not found.
+            KeyError: If required force field parameters are missing from setup.
+        
+        Note:
+            Requires the following files in the restart directory:
+            - restart_model.pdb: The protein-ligand complex structure
+            - ligand.sdf: The ligand structure file
+        """
         setup = self.setup 
         outdir = self.setup 
         forcefield_kwargs = self.forcefield_kwargs 
@@ -75,14 +117,27 @@ class Restarter():
 
 
 
-    def prep_restart(self,) -> Tuple[Modeller, SystemGenerator]:
-        '''
-        prepare system for restart simulation withoput ligand
-        :param setup: dict, setup parameters for the simulation wich is created when the simulation is started for the first time
-        :param outdir: str, output directory where the restart files are stored
-        :param forcefield_kwargs: dict, forcefield parameters
-        :return: Tuple[Modeller, SystemGenerator], Modeller object and SystemGenerator object
-        '''
+    def prep_restart(self) -> Tuple[Modeller, SystemGenerator]:
+        """
+        Prepare system for restart simulation without ligand (protein-only).
+        
+        This method loads the restart model PDB file and creates a new system with
+        the appropriate force fields for protein-only simulations. It handles both
+        solvated and implicit solvent (GBIS) systems.
+        
+        Returns:
+            Tuple[Modeller, SystemGenerator]: A tuple containing:
+                - Modeller: OpenMM Modeller object with topology and positions
+                - SystemGenerator: OpenMM System object with forces and parameters
+        
+        Raises:
+            FileNotFoundError: If restart_model.pdb file is not found.
+            KeyError: If required force field parameters are missing from setup.
+        
+        Note:
+            Requires restart_model.pdb file in the restart directory containing
+            the protein structure from the previous simulation.
+        """
         setup = self.setup 
         outdir = self.setup 
         forcefield_kwargs = self.forcefield_kwargs 
@@ -122,17 +177,40 @@ class Restarter():
 
 
 
-    def restart_simulation(self,system, modeller,restart_dir, setup,  clock=None, step=None):
-        '''
-        restart the simulation from the last state of the previous simulation from a stat.xml file and topology
-        :param system: openmm.System, the system object
-        :param modeller: openmm.Modeller, the modeller object
-        :param restart_dir: str, the directory where the restart files are stored
-        :param setup: dict, setup parameters for the simulation wich is created when the simulation is started for the first time
-        :param clock: int, the time in minutes for the simulation to run
-        :param step: int, the number of steps for the simulation to run
-        :return: None
-        '''
+    def restart_simulation(self, system, modeller, restart_dir, setup, clock=None, step=None):
+        """
+        Restart molecular dynamics simulation from a previously saved state.
+        
+        This method loads the last saved state from an XML file and continues the simulation
+        from that point. It supports both time-based (clock) and step-based simulation modes.
+        The method automatically saves trajectory data, state information, and updates the
+        restart configuration file upon completion.
+        
+        Args:
+            system: OpenMM System object containing the molecular system definition.
+            modeller: OpenMM Modeller object with topology and current positions.
+            restart_dir (str): Directory containing restart files (last_state.xml, etc.).
+            setup (dict): Simulation setup parameters including temperature, integrator settings,
+                         and reporting intervals.
+            clock (float, optional): Simulation time in minutes. Mutually exclusive with step.
+            step (int, optional): Number of simulation steps to run. Mutually exclusive with clock.
+        
+        Raises:
+            FileNotFoundError: If last_state.xml or other required restart files are missing.
+            ValueError: If both clock and step are provided, or if neither is provided.
+            
+        Side Effects:
+            - Creates new trajectory file: output_traj_{last_state+1}.dcd
+            - Appends to log file: log.txt
+            - Saves final state: last_state.xml
+            - Saves final structure: last_state_{last_state+1}.pdb
+            - Updates restart_setup.yml with incremented last_state
+            - Exits the program upon completion
+            
+        Note:
+            This method calls sys.exit(0) upon successful completion, terminating the program.
+            For solvated systems, a Monte Carlo barostat is automatically added.
+        """
         setup = self.setup 
         outdir = self.setup 
         forcefield_kwargs = self.forcefield_kwargs 

@@ -176,7 +176,33 @@ def PDBwrite_all(modeller, filename):
     with open(filename, 'a') as outfile:
         writeFooter(modeller.topology, outfile)
     
+def get_outdir(config):
+    if config.restart is not None:
+        out_dir = config.restart
+
+    elif config.outdir is None :
+   
+        exist = True
+        i = 0
+        while exist:
+            out_dir = 'out_'+str(i)
+            exist = os.path.isdir(out_dir)
+            if not exist:
+                os.mkdir(out_dir)
+
+            i += 1
+    else:
+        # strip the trailing slash
+        out_dir = config.outdir.rstrip('/')
+        if not os.path.isdir(out_dir):
+            os.mkdir(out_dir)
+
+    return out_dir
     
+    
+
+
+
 
 def deletePcap(modeller):
     toDelete = []

@@ -15,21 +15,83 @@ from EasyMD.utils.utils import _formatIndex, writeFooter, PDBwrite_all,deletePca
 import mdtraj
 
 
-
-class SysGenerator():
-    def __init__(self,config):
+class SysGenerator:
+    """
+    System generator for molecular dynamics simulations.
+    
+    This class handles the preparation of molecular systems for MD simulations, including
+    protein structure fixing, ligand parameterization, solvation, and force field assignment.
+    It supports both new simulations and restart from previous states, with options for
+    explicit solvation or implicit solvent (GBIS) models.
+    
+    Attributes:
+        config: Configuration object containing simulation parameters and settings.
+        forcefield_kwargs (dict): Force field parameters including constraints and hydrogen mass.
+        last_state (int): Current state counter for trajectory numbering.
+        modeller: OpenMM Modeller object with final system topology and positions.
+        system: OpenMM System object with forces and parameters ready for simulation.
+    
+    Example:
+        >>> sys_gen = SysGenerator(config)
+        >>> modeller = sys_gen.modeller  # Access prepared system
+        >>> system = sys_gen.system     # Access force field system
+        
+    Note:
+        The class automatically determines whether to prepare a new system or restart
+        from a previous state based on the config.restart parameter.
+    """
+    def __init__(self, config):
+        """
+        Initialize the SysGenerator and prepare the molecular system.
+        
+        This constructor automatically determines whether to create a new system or
+        restart from a previous state based on the configuration. It sets up force field
+        parameters and prepares the complete system ready for simulation.
+        
+        Args:
+            config: Configuration object containing all simulation parameters including
+                   protein/ligand files, force fields, solvation settings, and output options.
+                   
+        Attributes Set:
+            config: Stores the configuration object
+            forcefield_kwargs (dict): Standard force field parameters with HBond constraints,
+                                    rigid water, no CM motion removal, and 4 amu hydrogen mass
+            last_state (int): Initialized to 0 for new simulations
+            modeller: OpenMM Modeller object with prepared system
+            system: OpenMM System object with force field parameters
+        """
+        print("SYSGENERATOR -----------------------------------")
         self.config = config
-        self.forcefield_kwargs = {'constraints': app.HBonds, 'rigidWater': True, 'removeCMMotion': False, 'hydrogenMass': 4*unit.amu }
+        self.forcefield_kwargs = {'constraints': app.HBonds, 'rigidWater': True, 'removeCMMotion': False, 'hydrogenMass': 4*unit.amu}
         self.last_state = 0
-        if config.restart != False  :
-            self._restartSetup()
-        else :
-            self._setup()
+        
+        if config.restart != None:
+            print("RESTART")
+            modeller, system = self._restartSetup()
+        else:
+            print("NO RESTART")
+            modeller, system = self._setup()
+        self.modeller = modeller
+        self.system = system
 
 
-
-    def _setup(self,):
-        if self.config.output is None:
+    def _setup(self):
+        """
+        Set up a new molecular dynamics system from scratch.
+        
+        This method handles the complete preparation of a new MD system including:
+        - Output directory creation and management
+        - System preparation (protein-only or protein-ligand complex)
+        - Force field assignment and parameterization
+        
+        Returns:
+            Tuple[Modeller, System]: OpenMM Modeller and System objects ready for simulation.
+            
+        Side Effects:
+            - Creates output directory (auto-numbered if not specified)
+            - Calls either _prep_prot() or _prep_complex() based on ligand presence
+        """
+        if self.config.outdir is None:
 
             exist = True
             i = 0
@@ -42,7 +104,7 @@ class SysGenerator():
 
         else:
             # strip the trailing slash
-            out_dir = self.config.output.rstrip('/')
+            out_dir = self.config.outdir.rstrip('/')
             if not os.path.isdir(out_dir):
                 os.mkdir(out_dir)
             
@@ -97,12 +159,32 @@ class SysGenerator():
         return modeller, system
 
 
-    def _restartSetup(self,):
-        out_dir = self.restart_dir
+    def _restartSetup(self):
+        """
+        Set up system for restart simulation from previously saved state.
+        
+        This method loads the restart configuration and prepares the system based on
+        the original simulation parameters. It automatically detects whether the
+        original simulation included a ligand by checking for ligand.sdf file.
+        
+        Returns:
+            Tuple[Modeller, System]: OpenMM Modeller and System objects ready for restart.
+            
+        Raises:
+            FileNotFoundError: If restart_setup.yml is not found in restart directory.
+            KeyError: If required parameters are missing from restart setup file.
+            
+        Side Effects:
+            - Loads restart_setup.yml configuration file
+            - Calls either _prep_restart() or _prep_restart_ligand() based on ligand presence
+        """
+        out_dir = self.config.restart
+
         with open(out_dir+'/'+'restart_setup.yml') as f:
             setup = yaml.load(f, Loader=yaml.FullLoader)
+            
 
-        print('Restarting from state files in directory', self.config.restart_dir, 'with setup file : ' )
+        print('Restarting from state files in directory', self.config.restart, 'with setup file : ' )
     
         #check if ligand.sdf is present in the restart directory 
         if not os.path.isfile(out_dir+'/'+'ligand.sdf'):
@@ -116,32 +198,50 @@ class SysGenerator():
 
         
 
-    def _prep_restart_ligand(self,):
-        '''
-        prepare system for restart simulation with ligand
-        :param setup: dict, setup parameters for the simulation wich is created when the simulation is started for the first time
-        :param outdir: str, output directory where the restart files are stored
-        :param forcefield_kwargs: dict, forcefield parameters
-        :return: Tuple[Modeller, SystemGenerator], Modeller object and SystemGenerator object
-        '''
+    def _prep_restart_ligand(self, setup: dict, outdir: str, forcefield_kwargs: dict):
+        """
+        Prepare system for restart simulation with ligand present.
+        
+        This method loads the restart model PDB file and ligand SDF file, then creates
+        a new system with the appropriate force fields for protein-ligand simulations.
+        It handles both solvated and implicit solvent (GBIS) systems based on the
+        original simulation setup.
+        
+        Args:
+            setup (dict): Setup parameters from the original simulation including
+                         force field specifications and solvation settings.
+            outdir (str): Output directory containing restart files (restart_model.pdb, ligand.sdf).
+            forcefield_kwargs (dict): Force field parameters for system generation.
+        
+        Returns:
+            Tuple[Modeller, System]: OpenMM Modeller and System objects ready for restart.
+        
+        Raises:
+            FileNotFoundError: If restart_model.pdb or ligand.sdf files are not found.
+            KeyError: If required force field parameters are missing from setup.
+        
+        Note:
+            For solvated systems, uses explicit water force fields.
+            For implicit systems, uses GBIS with NoCutoff nonbonded method.
+        """
         # load pdb file
-        pdb = PDBFile(self.config.outdir+'/'+'restart_model.pdb')
-        ligand_mol = Molecule.from_file(self.config.outdir+'/'+'ligand.sdf')
-        protein_force_field = self.config.protein_force_field
-        water_force_field = self.config.water_force_field
-        ligand_force_field = self.config.ligand_force_field
+        pdb = PDBFile(outdir+'/'+'restart_model.pdb')
+        ligand_mol = Molecule.from_file(outdir+'/'+'ligand.sdf')
+        protein_force_field = setup['protein_force_field']
+        water_force_field = setup['water_force_field']
+        ligand_force_field = setup['ligand_force_field']
         modeller = Modeller(pdb.topology, pdb.positions)
     
 
         
-        if self.config.solvate:
+        if setup['solvate']:
             print('generating system with solvent...')
         
             system_generator = SystemGenerator(
             forcefields=[protein_force_field, water_force_field],
             small_molecule_forcefield=ligand_force_field,
             molecules=[ligand_mol],
-            forcefield_kwargs=self.forcefield_kwargs)
+            forcefield_kwargs=forcefield_kwargs)
             
             system = system_generator.create_system(modeller.topology, molecules=ligand_mol)
         
@@ -157,7 +257,7 @@ class SysGenerator():
             forcefields=['amber14-all.xml', 'amber14/tip3pfb.xml', 'implicit/gbn2.xml'],
             small_molecule_forcefield=ligand_force_field,
             molecules=[ligand_mol],
-            forcefield_kwargs=self.forcefield_kwargs,
+            forcefield_kwargs=forcefield_kwargs,
             nonperiodic_forcefield_kwargs={'nonbondedMethod': app.NoCutoff}
             )
             system = system_generator.create_system(modeller.topology, molecules=ligand_mol)
@@ -167,56 +267,117 @@ class SysGenerator():
 
 
 
-    def _prep_restart(self ):
-        '''
-        prepare system for restart simulation without ligand
-        :param setup: dict, setup parameters for the simulation wich is created when the simulation is started for the first time
-        :param outdir: str, output directory where the restart files are stored
-        :param forcefield_kwargs: dict, forcefield parameters
-        :return: Tuple[Modeller, SystemGenerator], Modeller object and SystemGenerator object
-        '''
+        
+    def _prep_restart(self, setup: dict, outdir: str, forcefield_kwargs: dict):
+        """
+        Prepare system for restart simulation without ligand (protein-only).
+        
+        This method loads the restart model PDB file and creates a new system with
+        the appropriate force fields for protein-only simulations. It handles both
+        solvated and implicit solvent (GBIS) systems based on the original simulation setup.
+        
+        Args:
+            setup (dict): Setup parameters from the original simulation including
+                         force field specifications and solvation settings.
+            outdir (str): Output directory containing restart files (restart_model.pdb).
+            forcefield_kwargs (dict): Force field parameters for system generation.
+        
+        Returns:
+            Tuple[Modeller, System]: OpenMM Modeller and System objects ready for restart.
+        
+        Raises:
+            FileNotFoundError: If restart_model.pdb file is not found.
+            KeyError: If required force field parameters are missing from setup.
+        
+        Note:
+            For solvated systems, uses explicit water force fields.
+            For implicit systems, uses GBIS with NoCutoff nonbonded method.
+        """
         # load pdb file
-        pdb = PDBFile(self.config.outdir+'/'+'restart_model.pdb')
-        protein_force_field = self.config.protein_force_field
-        water_force_field = self.config.water_force_field
+        pdb = PDBFile(outdir+'/'+'restart_model.pdb')
+        protein_force_field = setup['protein_force_field']
+        water_force_field = setup['water_force_field']
         modeller = Modeller(pdb.topology, pdb.positions)
     
 
         
-        if self.config.solvate:
+        if setup['solvate']:
             print('generating system with solvent...')
         
             system_generator = SystemGenerator(
             forcefields=[protein_force_field, water_force_field],
-            forcefield_kwargs=self.forcefield_kwargs)
+            forcefield_kwargs=forcefield_kwargs)
 
             system = system_generator.create_system(modeller.topology)
         
         
         else :
             
-            pdb = mdtraj.load(self.config.outdir+'/'+'restart_model.pdb')
+            pdb = mdtraj.load(outdir+'/'+'restart_model.pdb')
             topology = pdb.topology.to_openmm()
             print('generating system without solvent...')
             system_generator = SystemGenerator(
             forcefields=['amber14-all.xml', 'amber14/tip3pfb.xml', 'implicit/gbn2.xml'],
         
-            forcefield_kwargs=self.forcefield_kwargs,
+            forcefield_kwargs=forcefield_kwargs,
             nonperiodic_forcefield_kwargs={'nonbondedMethod': app.NoCutoff}
             )
             
             system = system_generator.create_system(topology)
         
         return modeller, system
-    
 
 
-    def _prep_prot(self,pdb_in,list_of_molecules_to_remove,
-                    solvate,protein_force_field,water_force_field,
-                    water_model,positive_ion,
-                    negative_ion,ionic_strength,no_neutralize,padding,ph,
-                    outdir,forcefield_kwargs):
         
+
+
+
+
+    def _prep_prot(self, pdb_in, list_of_molecules_to_remove,
+                    solvate, protein_force_field, water_force_field,
+                    water_model, positive_ion,
+                    negative_ion, ionic_strength, no_neutralize, padding, ph,
+                    outdir, forcefield_kwargs):
+        """
+        Prepare protein-only system for molecular dynamics simulation.
+        
+        This method performs comprehensive protein preparation including structure fixing,
+        molecule removal, solvation (if requested), and force field assignment. It handles
+        both explicit solvent and implicit solvent (GBIS) systems.
+        
+        Args:
+            pdb_in (str): Path to input PDB file containing the protein structure.
+            list_of_molecules_to_remove (list): List of molecule names to remove from structure.
+            solvate (bool): Whether to add explicit solvent box.
+            protein_force_field (str): Protein force field specification (e.g., 'amber14-all.xml').
+            water_force_field (str): Water force field specification (e.g., 'amber/tip3p_standard.xml').
+            water_model (str): Water model to use for solvation (e.g., 'tip3p').
+            positive_ion (str): Positive ion type for neutralization (e.g., 'Na+').
+            negative_ion (str): Negative ion type for neutralization (e.g., 'Cl-').
+            ionic_strength (float): Ionic strength for solvation (M).
+            no_neutralize (bool): Whether to skip system neutralization.
+            padding (float): Solvent box padding around protein (Å).
+            ph (float): pH for protonation state assignment.
+            outdir (str): Output directory for generated files.
+            forcefield_kwargs (dict): Force field parameters and constraints.
+        
+        Returns:
+            Tuple[Modeller, System]: OpenMM Modeller and System objects ready for simulation.
+        
+        Side Effects:
+            - Creates prot_receptor.pdb: Cleaned protein structure
+            - Creates solvated_complex.pdb: Solvated system (if solvate=True)
+            - Creates restart_model.pdb: Final system ready for simulation
+            
+        Raises:
+            FileNotFoundError: If input PDB file is not found.
+            Exception: If protein fixing or solvation fails.
+            
+        Note:
+            The method automatically adds missing residues, atoms, and hydrogens,
+            removes specified molecules (including water), and optionally solvates
+            the system with specified parameters.
+        """
         # load and fix the protein
             
         fixer = PDBFixer(filename=pdb_in)

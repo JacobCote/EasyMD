@@ -27,7 +27,7 @@ parser.add_argument("-p", "--protein", required=False, help="Protein PDB file")
 parser.add_argument("-l", "--ligand", required=False, help="Ligand name in pdb file (often LIG, check your pdb file to be sure of the name)")
 parser.add_argument("-o", "--output", default=None, help="Name of an output directory")
 parser.add_argument("-s", "--steps", type=int, default=None, help="Number of steps")
-parser.add_argument("-z", "--step-size", type=float, default=0.002, help="Step size (ps")
+parser.add_argument("-z", "--step_size", type=float, default=0.002, help="Step size (ps")
 parser.add_argument("-f", "--friction-coeff", type=float, default=1, help="Friction coefficient (ps)")
 parser.add_argument("-i", "--interval", type=int, default=1000, help="Reporting interval")
 parser.add_argument("-t", "--temperature", type=int, default=300, help="Temperature (K)")
@@ -185,7 +185,8 @@ else:
 if args.simulated_annealing:
     simulated_annealing(modeller, system, temperature, out_dir, args.step_size, args.friction_coeff, args.interval, args.equilibration_steps)
     exit(0)  
-                            
+
+                      
 # Set up the simulation
 friction_coeff = args.friction_coeff / unit.picosecond
 if args.clock is None:

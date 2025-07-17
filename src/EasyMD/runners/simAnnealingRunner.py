@@ -3,8 +3,41 @@ from openmm.app import PDBFile, Simulation, StateDataReporter, DCDReporter
 from openmm import unit, LangevinIntegrator 
 
 
-class AnnealingRunner():
-    def __init__(self,config,modeller,system):
+class AnnealingRunner:
+    """
+    Molecular dynamics simulation runner for simulated annealing protocols.
+    
+    This class implements simulated annealing, a technique that gradually increases
+    temperature during simulation to help the system escape local energy minima
+    and explore conformational space more effectively. This is particularly useful
+    for protein folding studies, conformational sampling, and optimization problems.
+    
+    Attributes:
+        config: Configuration object containing simulation parameters.
+        modeller: OpenMM Modeller object with system topology and positions.
+        system: OpenMM System object with forces and parameters.
+        temperature (unit.Quantity): Starting simulation temperature in Kelvin.
+        equilibration_steps (int): Number of equilibration steps.
+        step_size (unit.Quantity): Integration time step in picoseconds.
+    
+    Example:
+        >>> runner = AnnealingRunner(config, modeller, system)
+        >>> runner.run()  # Starts the simulated annealing protocol
+        
+    Note:
+        The annealing protocol gradually increases temperature from the base
+        temperature by 0.1K increments over 2000 cycles of 100 steps each.
+    """
+    def __init__(self, config, modeller, system):
+        """
+        Initialize the AnnealingRunner with simulation parameters.
+        
+        Args:
+            config: Configuration object containing simulation parameters including
+                   temperature (starting point), intervals, and output settings.
+            modeller: OpenMM Modeller object with system topology and initial positions.
+            system: OpenMM System object containing force field parameters and constraints.
+        """
         self.config = config
         self.modeller = modeller
         self.system = system
@@ -13,10 +46,38 @@ class AnnealingRunner():
         self.step_size = self.config.step_size * unit.picoseconds
       
 
-    def run(self,):
-                    
+    def run(self):
+        """
+        Execute the simulated annealing molecular dynamics protocol.
+        
+        This method performs the following simulated annealing workflow:
+        1. Sets up the Langevin integrator with initial temperature
+        2. Performs energy minimization to remove bad contacts
+        3. Equilibrates the system at starting temperature
+        4. Runs annealing protocol: 2000 cycles of 100 steps each
+        5. Gradually increases temperature by 0.1K per cycle
+        6. Saves final annealed structure
+        
+        The annealing protocol helps the system escape local minima by providing
+        thermal energy to overcome energy barriers, potentially finding lower
+        energy conformations or exploring conformational space more thoroughly.
+        
+        Side Effects:
+            - Creates trajectory file: simulated_anhealing.dcd
+            - Creates log file: log.txt with energy and temperature data
+            - Saves minimized structure: minimised.pdb
+            - Saves final annealed structure: last_state.pdb
+            - Terminates program execution with sys.exit(0)
+            
+        Raises:
+            Exception: If energy minimization fails or simulation encounters errors.
+            
+        Note:
+            The method calls sys.exit(0) upon completion, terminating the program.
+            Temperature increases from base temperature to base + 200K over the protocol.
+        """
         # Set up the simulation
-        friction_coeff = friction_coeff / unit.picosecond
+        friction_coeff = self.config.friction_coeff / unit.picosecond
         
         #step_size = step_size * unit.picoseconds
         

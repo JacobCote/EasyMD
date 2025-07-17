@@ -21,31 +21,39 @@ from .argManager.manager import ArgManager
 def main():
 
 
+
     #t0 = time.time()
 
     # setup argManager
     parser = argparse.ArgumentParser(description="Simulate", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     argManager = ArgManager(parser)
-    config = argManager.getargs()
+    config = argManager.get_args()
     print("Simulate with these parameters: ")
     pprint.pprint(vars(config))
+    
+    config.outdir = utils.get_outdir(config)
+    
+
+           
+
+
 
     # get the chosen or fastest platform
     platform = utils.get_platform()
 
-
+    print("SYSGENERATOR -----------------------------------")
     ## system preparation
-    modeller, system = SysGenerator(config)
+    sysGenerator = SysGenerator(config)
+    
 
     ## simulaton prep 
-    sim = SimRunner(config,modeller,system)
+    sim = SimRunner(config,sysGenerator.modeller,sysGenerator.system)
 
     ## start sim
     sim.run()
 
 
 if __name__ == "__main__":
-    print("ok")
 
     main()
 
