@@ -77,6 +77,11 @@ python -m EasyMD --config simulation.yml
 python -m EasyMD --restart out_0/
 ```
 
+**Analyze trajectory:**
+```bash
+python -m EasyMD analyze out_0/ --rmsd --rmsf --save-data
+```
+
 ### Argument Groups
 
 EasyMD organizes arguments into logical groups for better usability:
@@ -173,6 +178,111 @@ For available force fields, see the [OpenMM Force Fields documentation](https://
 ### Cluster Usage
 
 Example scripts for cluster usage are provided in the `examples/` folder. These demonstrate how to set up simulations on HPC systems with proper resource allocation and job management.
+
+## Trajectory Analysis
+
+EasyMD includes a comprehensive analysis module for post-simulation trajectory analysis. The analysis tools provide insights into structural dynamics, stability, and conformational changes.
+
+### Analysis Usage
+
+Run trajectory analysis using the `analyze` subcommand:
+
+```bash
+python -m EasyMD analyze [trajectory_directory] [options]
+```
+
+### Analysis Help
+
+For comprehensive analysis help:
+```bash
+python -m EasyMD analyze --help
+```
+
+### Analysis Examples
+
+**Basic RMSD and RMSF analysis:**
+```bash
+python -m EasyMD analyze out_0/ --rmsd --rmsf
+```
+
+**Perform all available analyses:**
+```bash
+python -m EasyMD analyze out_0/ --all --save-data
+```
+
+**Custom analysis with specific parameters:**
+```bash
+python -m EasyMD analyze out_0/ --rmsd --atom-selection backbone \
+                 --reference-frame 10 --skip-frames 5
+```
+
+**High-quality publication plots:**
+```bash
+python -m EasyMD analyze out_0/ --rmsf --output-format pdf --dpi 600 \
+                 --plot-style seaborn
+```
+
+**Analyze specific frame range:**
+```bash
+python -m EasyMD analyze out_0/ --rmsd --start-frame 1000 --end-frame 5000
+```
+
+### Available Analyses
+
+**Structural Metrics:**
+- `--rmsd`: Root Mean Square Deviation - measures structural similarity to reference
+- `--rmsf`: Root Mean Square Fluctuation - identifies flexible regions
+- `--radius-gyration`: Radius of gyration - measures protein compactness
+
+**Inter-molecular Analysis:**
+- `--distances`: Center-of-mass distances between protein chains
+- `--secondary-structure`: Secondary structure evolution over time
+
+**Comprehensive Analysis:**
+- `--all`: Perform all available analyses
+
+### Analysis Parameters
+
+**Atom Selection:**
+- `--atom-selection`: Choose atoms for analysis (`all`, `backbone`, `ca`, `heavy`)
+- `--reference-frame`: Reference frame for RMSD calculation (default: 0)
+
+**Frame Selection:**
+- `--start-frame`: Starting frame for analysis (default: 0)
+- `--end-frame`: Ending frame for analysis (default: all frames)
+- `--skip-frames`: Skip every N frames (default: 1, no skipping)
+
+**Output Options:**
+- `--output-dir`: Custom output directory (default: trajectory_dir/analysis)
+- `--output-format`: Plot format (`png`, `pdf`, `svg`)
+- `--dpi`: Plot resolution (default: 300)
+- `--plot-style`: Matplotlib style (`default`, `seaborn`, `ggplot`)
+- `--save-data`: Export analysis data as CSV files
+- `--no-plots`: Skip plot generation (data only)
+
+### Analysis Output Files
+
+**Generated Plots:**
+- `rmsd.png` - RMSD vs time with statistics
+- `rmsf.png` - RMSF per residue
+- `distances.png` - Inter-chain distance evolution
+- `radius_gyration.png` - Radius of gyration vs time
+- `secondary_structure.png` - Secondary structure heatmap and evolution
+
+**Data Files (with --save-data):**
+- `rmsd_data.csv` - RMSD values and frame numbers
+- `rmsf_data.csv` - RMSF values per residue
+- `distances_data.csv` - Inter-chain distances
+- `radius_gyration_data.csv` - Radius of gyration values
+- `secondary_structure_data.csv` - Secondary structure counts
+
+### Analysis Validation
+
+The analysis module includes comprehensive validation:
+- **Input validation**: Checks for required trajectory files and topology
+- **Parameter validation**: Ensures analysis parameters are reasonable
+- **Error handling**: Clear error messages with suggested fixes
+- **Progress reporting**: Real-time analysis progress and statistics
 
 ## Testing
 
