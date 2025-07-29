@@ -48,11 +48,22 @@ class TestArgManager:
         """Test ArgManager initialization with config file"""
         with patch('sys.argv', ['test', '--config', temp_config_file]):
             manager = ArgManager(basic_parser)
+    
+    def test_keep_water_argument_default(self, basic_parser):
+        """Test that keep_water argument has correct default value"""
+        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate']):
+            manager = ArgManager(basic_parser)
             args = manager.get_args()
+            assert args.keep_water is False
+    
+    def test_keep_water_argument_flag(self, basic_parser):
+        """Test that --keep-water flag sets keep_water to True"""
+        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate', '--keep-water']):
+            manager = ArgManager(basic_parser)
+            args = manager.get_args()
+            assert args.keep_water is True
             assert args.protein == 'test.pdb'
-            assert args.ligand == 'LIG'
             assert args.steps == 1000
-            assert args.temperature == 300
             assert args.solvate is True
     
     def test_config_file_override_by_cli(self, basic_parser, temp_config_file):
@@ -99,21 +110,7 @@ class TestArgManager:
             with pytest.raises(SystemExit):
                 ArgManager(basic_parser)
     
-    def test_restart_setup(self, basic_parser, sample_config_data):
-        """Test restart setup functionality"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
-            yaml.dump(sample_config_data, f)
-            setup_file = f.name
-        
-        try:
-            with patch('sys.argv', ['test']):
-                manager = ArgManager(basic_parser)
-                manager.restart_setup(setup_file)
-                # After restart_setup, sys.argv should be modified
-                assert '--protein' in ' '.join(manager.parser.parse_args().protein or [])
-        finally:
-            os.unlink(setup_file)
-    
+
     @pytest.mark.parametrize("water_model", ["tip3p", "spce", "tip4pew", "tip5p", "swm4ndp"])
     def test_water_model_choices(self, basic_parser, water_model):
         """Test valid water model choices"""

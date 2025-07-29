@@ -28,8 +28,7 @@ def main():
     parser = argparse.ArgumentParser(description="Simulate", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     argManager = ArgManager(parser)
     config = argManager.get_args()
-    print("Simulate with these parameters: ")
-    pprint.pprint(vars(config))
+    
     
     config.outdir = utils.get_outdir(config)
     
@@ -41,7 +40,6 @@ def main():
     # get the chosen or fastest platform
     platform = utils.get_platform()
 
-    print("SYSGENERATOR -----------------------------------")
     ## system preparation
     sysGenerator = SysGenerator(config)
     

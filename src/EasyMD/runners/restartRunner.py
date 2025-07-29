@@ -49,8 +49,15 @@ class Restarter:
             modeller: OpenMM Modeller object with system topology and positions.
             system: OpenMM System object containing force field parameters and constraints.
         """
+        
         self.setup = setup
+        self.setup = config.config
+        
+       
+        
+        
         self.config = config
+       
         self.modeller = modeller
         self.system = system
         self.temperature = self.config.temperature * unit.kelvin

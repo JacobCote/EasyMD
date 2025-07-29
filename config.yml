@@ -1,16 +1,14 @@
 # example config.yml file with default params
 
-protein: null
-ligand: null
-output: null
-steps: null
+protein: 4zgm.pdb
+steps: 2000
 step_size: 0.002
 friction_coeff: 1
 interval: 1000
 temperature: 300
 
 solvate: false
-GBIS: false
+GBIS: True
 padding: 10
 water_model: tip3p
 positive_ion: Na+
@@ -25,10 +23,9 @@ water_force_field: amber/tip3p_standard.xml
 
 remove:
   - DMS
+  - 32M
 ph: 7.0
 
 restart: false
-restart_dir: null
 
-clock: null
 simulated_annealing: false

@@ -33,9 +33,9 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
-    get_charges()
-
+    
     print(f"Calculating charges for {args.input} with MMFF94 and saving in {args.output}")
+    get_charges(args.input, args.output, args.file_type, 'sdf')
 
 
 

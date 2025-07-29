@@ -111,30 +111,28 @@ class TestSysGenerator:
         assert sys_gen.system == mock_system
         mock_restart_setup.assert_called_once()
     
-    @patch('EasyMD.sysGenerator.sysGenerator.os.path.isdir')
-    @patch('EasyMD.sysGenerator.sysGenerator.os.mkdir')
-    def test_setup_creates_output_directory(self, mock_mkdir, mock_isdir, mock_config_no_restart):
+    @patch('EasyMD.sysGenerator.sysGenerator.os.path.exists')
+    @patch('EasyMD.sysGenerator.sysGenerator.os.makedirs')
+    def test_setup_creates_output_directory(self, mock_makedirs, mock_exists, mock_config_no_restart):
         """Test that setup creates output directory when it doesn't exist"""
-        mock_isdir.side_effect = [True, True, False]  # out_0, out_1 exist, out_2 doesn't
+        mock_exists.side_effect = [True, True, False]  # out_0, out_1 exist, out_2 doesn't
         
         with patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_prot') as mock_prep:
             mock_prep.return_value = (Mock(), Mock())
             SysGenerator(mock_config_no_restart)
         
-        mock_mkdir.assert_called_with('out_2')
+        mock_makedirs.assert_called_with('out_2', exist_ok=True)
     
-    @patch('EasyMD.sysGenerator.sysGenerator.os.path.isdir')
-    @patch('EasyMD.sysGenerator.sysGenerator.os.mkdir')
-    def test_setup_uses_provided_outdir(self, mock_mkdir, mock_isdir, mock_config_no_restart):
+    @patch('EasyMD.sysGenerator.sysGenerator.os.makedirs')
+    def test_setup_uses_provided_outdir(self, mock_makedirs, mock_config_no_restart):
         """Test that setup uses provided output directory"""
         mock_config_no_restart.outdir = 'custom_out/'
-        mock_isdir.return_value = False
         
         with patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_prot') as mock_prep:
             mock_prep.return_value = (Mock(), Mock())
             SysGenerator(mock_config_no_restart)
         
-        mock_mkdir.assert_called_with('custom_out')
+        mock_makedirs.assert_called_with('custom_out/', exist_ok=True)
     
     @patch('builtins.open', new_callable=mock_open, read_data='protein_force_field: amber14-all.xml\nsolvate: true')
     @patch('EasyMD.sysGenerator.sysGenerator.yaml.load')

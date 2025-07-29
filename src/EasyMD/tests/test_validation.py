@@ -6,7 +6,7 @@ This script shows various validation scenarios and error messages.
 
 import sys
 import argparse
-from src.EasyMD.argManager.manager import ArgManager
+from EasyMD.argManager.manager import ArgManager
 
 def test_validation_scenarios():
     """Test various validation scenarios to demonstrate the enhanced error handling."""

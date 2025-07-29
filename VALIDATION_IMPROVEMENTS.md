@@ -35,8 +35,36 @@ The validation system now checks:
 - ✅ **Ligand Parameters**: Naming conventions, conflicts
 
 ### 3. Smart Error Categorization
-- **Errors** (❌): Must be fixed before simulation can start
-- **Warnings** (⚠️): Potentially problematic but not blocking
+- **Errors** (❌): Must be fixed before simulation can start - **BLOCKS EXECUTION**
+- **Warnings** (⚠️): Potentially problematic but **ALLOWS SIMULATION TO CONTINUE**
+
+#### Warning vs Error Examples:
+
+**Warning (Simulation Continues):**
+```bash
+════════════════════════════════════════════════════════════
+⚠️  VALIDATION WARNINGS
+════════════════════════════════════════════════════════════
+
+⚠️  1. Very short simulation (100 steps). Consider at least 10,000 steps
+
+Found 1 warning(s). Simulation will continue...
+════════════════════════════════════════════════════════════
+
+✅ INPUT VALIDATION COMPLETED WITH WARNINGS
+Proceeding with simulation despite warnings...
+```
+
+**Error (Simulation Blocked):**
+```bash
+❌ INPUT VALIDATION FAILED
+════════════════════════════════════════════════════════════
+
+❌ 1. Cannot specify both --steps and --clock. Choose one simulation duration method
+
+QUICK FIXES:
+• Use either --steps 10000 OR --clock 60 (not both)
+```
 
 ### 4. Quick Fix Suggestions
 Each error comes with specific suggestions:

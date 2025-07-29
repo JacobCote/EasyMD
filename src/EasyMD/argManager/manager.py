@@ -119,10 +119,24 @@ class ArgManager:
         self.parser.add_argument("--ligand-force-field", default='openff-2.2.0', help="Ligand force field")
         self.parser.add_argument("--water-force-field", default='amber/tip3p_standard.xml', help="Water force field")
         self.parser.add_argument("--remove", nargs='*', default=['DMS'], help="Molecules to remove (e.g. DMS LIG)")
+        self.parser.add_argument("--keep-water", action='store_true', help="Keep water molecules from PDB (default: remove)")
         self.parser.add_argument("--ph", type=float, default=7.0, help="Protonation pH")
         self.parser.add_argument("-r","--restart", type=str, default=None, help="Use restart mode, must give the directory to restart from")
-        self.parser.add_argument("--clock", type=float, default=None, help="Run simulation based on wall time (min)")
+        self.parser.add_argument("--clock", type=int, default=None, help="Run simulation based on wall time (min)")
         self.parser.add_argument("--simulated-annealing", action='store_true', default=False, help="Run simulated annealing")
+        
+        # Missing residue handling options
+        self.parser.add_argument("--missing-residues", default="auto", 
+                            choices=["auto", "none", "non-terminal", "terminal-only", "all"],
+                            help="Strategy for adding missing residues: auto (default), none (skip all), non-terminal (only internal), terminal-only (only ends), all (add everything)")
+        self.parser.add_argument("--max-terminal-residues", type=int, default=5,
+                            help="Maximum number of missing residues to add at terminal ends (default: 5)")
+        self.parser.add_argument("--terminal-residue-types", nargs='*', default=['ACE', 'NME', 'NH2', 'COOH'],
+                            help="Allowed terminal residue types to add (default: ACE NME NH2 COOH)")
+        self.parser.add_argument("--skip-missing-loops", action='store_true', default=False,
+                            help="Skip adding missing residues in loop regions (may cause gaps)")
+        self.parser.add_argument("--conservative-missing", action='store_true', default=False,
+                            help="Use conservative approach: only add missing residues with high confidence")
 
     def get_args(self):
         return self.args
@@ -165,13 +179,24 @@ class ArgManager:
         # Validate ligand parameters
         self._validate_ligand_parameters(args, errors)
         
-        # If any errors found, display them and exit
-        if errors:
-            self._display_validation_errors(errors)
+        # Validate missing residue parameters
+        self._validate_missing_residue_parameters(args, errors)
+        
+        # Separate errors from warnings
+        actual_errors = [e for e in errors if not e.startswith("Warning:")]
+        warnings = [e for e in errors if e.startswith("Warning:")]
+        
+        # Display warnings but continue execution
+        if warnings:
+            self._display_warnings(warnings)
+        
+        # Only exit on actual errors
+        if actual_errors:
+            self._display_validation_errors(actual_errors, warnings)
             sys.exit(1)
         
-        # Display validation success message
-        self._display_validation_success(args)
+        # Display validation success message (even if there were warnings)
+        self._display_validation_success(args, warnings)
     
     def _validate_input_files(self, args, errors):
         """Validate input file arguments."""
@@ -368,31 +393,70 @@ class ArgManager:
             if len(molecule) > 4:
                 errors.append(f"Warning: Molecule name '{molecule}' is longer than 4 characters")
     
-    def _display_validation_errors(self, errors):
+    def _validate_missing_residue_parameters(self, args, errors):
+        """Validate missing residue handling parameters."""
+        # Validate max terminal residues
+        if args.max_terminal_residues < 0:
+            errors.append(f"Maximum terminal residues cannot be negative, got {args.max_terminal_residues}")
+        elif args.max_terminal_residues > 20:
+            errors.append(f"Warning: Very high max terminal residues ({args.max_terminal_residues}). "
+                         "Consider if this is intended - typical range is 1-10")
+        
+        # Validate terminal residue types
+        common_terminal_types = ['ACE', 'NME', 'NH2', 'COOH', 'FOR', 'NH3+', 'COO-']
+        for res_type in args.terminal_residue_types:
+            if len(res_type) > 4:
+                errors.append(f"Warning: Terminal residue type '{res_type}' is longer than 4 characters")
+            if res_type not in common_terminal_types:
+                errors.append(f"Warning: Uncommon terminal residue type '{res_type}'. "
+                             f"Common types: {', '.join(common_terminal_types[:4])}")
+        
+        # Validate missing residue strategy combinations
+        if args.missing_residues == "none" and (args.skip_missing_loops or args.conservative_missing):
+            errors.append("Warning: Missing residue options (--skip-missing-loops, --conservative-missing) "
+                         "have no effect when --missing-residues is set to 'none'")
+        
+        if args.missing_residues == "terminal-only" and args.skip_missing_loops:
+            errors.append("Warning: --skip-missing-loops has no effect when --missing-residues is 'terminal-only'")
+        
+        # Provide guidance on missing residue strategies
+        if args.missing_residues == "auto":
+            errors.append("Warning: Using 'auto' missing residue strategy. "
+                         "Consider specifying explicit strategy for reproducible results")
+    
+    def _display_warnings(self, warnings):
+        """Display warnings but allow simulation to continue."""
+        print("\n" + "="*60)
+        print("⚠️  VALIDATION WARNINGS")
+        print("="*60)
+        print("\nThe following issues were detected but won't prevent simulation:")
+        print("(Consider reviewing these for optimal results)\n")
+        
+        for i, warning in enumerate(warnings, 1):
+            # Remove "Warning: " prefix for cleaner display
+            clean_warning = warning.replace("Warning: ", "")
+            print(f"⚠️  {i}. {clean_warning}")
+        
+        print(f"\nFound {len(warnings)} warning(s). Simulation will continue...")
+        print("="*60)
+    
+    def _display_validation_errors(self, actual_errors, warnings=None):
         """Display validation errors in a user-friendly format."""
         print("\n" + "="*60)
         print("❌ INPUT VALIDATION FAILED")
         print("="*60)
         print("\nPlease fix the following issues before running the simulation:\n")
         
-        error_count = 0
-        warning_count = 0
+        for i, error in enumerate(actual_errors, 1):
+            print(f"❌ {i}. {error}")
         
-        for i, error in enumerate(errors, 1):
-            if error.startswith("Warning:"):
-                print(f"⚠️  {i}. {error}")
-                warning_count += 1
-            else:
-                print(f"❌ {i}. {error}")
-                error_count += 1
+        warning_count = len(warnings) if warnings else 0
+        print(f"\nSummary: {len(actual_errors)} errors, {warning_count} warnings")
         
-        print(f"\nSummary: {error_count} errors, {warning_count} warnings")
-        
-        if error_count > 0:
-            print("\n" + "="*60)
-            print("QUICK FIXES:")
-            print("="*60)
-            self._provide_quick_fixes(errors)
+        print("\n" + "="*60)
+        print("QUICK FIXES:")
+        print("="*60)
+        self._provide_quick_fixes(actual_errors)
         
         print("\n" + "="*60)
         print("For detailed help, run: python -m EasyMD --help")
@@ -424,11 +488,17 @@ class ArgManager:
             print("• Verify all file paths exist and are accessible")
             print("• Ensure parameter values are within reasonable ranges")
     
-    def _display_validation_success(self, args):
+    def _display_validation_success(self, args, warnings=None):
         """Display validation success message with simulation summary."""
-        print("\n" + "="*60)
-        print("✅ INPUT VALIDATION SUCCESSFUL")
-        print("="*60)
+        if warnings:
+            print("\n" + "="*60)
+            print("✅ INPUT VALIDATION COMPLETED WITH WARNINGS")
+            print("="*60)
+            print(f"\nValidation passed with {len(warnings)} warning(s) (see above)")
+        else:
+            print("\n" + "="*60)
+            print("✅ INPUT VALIDATION SUCCESSFUL")
+            print("="*60)
         
         print("\nSimulation Configuration Summary:")
         print("-" * 40)
@@ -459,7 +529,10 @@ class ArgManager:
         print(f"Output: {args.outdir or 'auto-generated directory'}")
         
         print("\n" + "="*60)
-        print("Ready to start simulation!")
+        if warnings:
+            print("Proceeding with simulation despite warnings...")
+        else:
+            print("Ready to start simulation!")
         print("="*60 + "\n")
 
     def restart_setup(self, setup_file):

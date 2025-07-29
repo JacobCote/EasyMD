@@ -42,12 +42,17 @@ class GBISRunner:
             modeller: OpenMM Modeller object with system topology and initial positions.
             system: OpenMM System object containing GBIS force field parameters and constraints.
         """
+        
+
         self.config = config
         self.modeller = modeller
         self.system = system
         self.temperature = self.config.temperature * unit.kelvin
         self.equilibration_steps = self.config.equilibration_steps
         self.step_size = self.config.step_size * unit.picoseconds
+        self.friction_coeff = self.config.friction_coeff / unit.picosecond
+
+        self.integrator = LangevinIntegrator(self.temperature,  self.friction_coeff, self.config.step_size * unit.picoseconds)
       
 
     def run(self):
@@ -90,7 +95,6 @@ class GBISRunner:
             duration = (step_size * self.config.steps).value_in_unit(unit.nanoseconds)
             print('Simulating for {} ns'.format(duration))
 
-        integrator = LangevinIntegrator(self.temperature, friction_coeff, self.config.step_size * unit.picoseconds)
 
         if self.system.usesPeriodicBoundaryConditions():
             print('Default Periodic box: {}'.format(self.system.getDefaultPeriodicBoxVectors()))
@@ -99,7 +103,7 @@ class GBISRunner:
             
 
 
-        simulation = Simulation(self.modeller.topology, self.system, integrator)
+        simulation = Simulation(self.modeller.topology, self.system, self.integrator)
 
 
         context = simulation.context
@@ -108,7 +112,25 @@ class GBISRunner:
 
 
         print('Minimising ...')
-        simulation.minimizeEnergy(maxIterations=10)
+        try:
+            simulation.minimizeEnergy(maxIterations=10)
+            print('✓ Energy minimization completed successfully')
+        except Exception as e:
+            if "NaN" in str(e) or "coordinate is NaN" in str(e):
+                print(f"❌ Energy minimization failed due to NaN coordinates: {e}")
+                print("This usually indicates:")
+                print("  - Overlapping atoms in the initial structure")
+                print("  - Invalid ligand coordinates")
+                print("  - Issues with the force field parameterization")
+                print("\nTroubleshooting suggestions:")
+                print("  1. Check your input PDB structure for overlapping atoms")
+                print("  2. Verify ligand coordinates are reasonable")
+                print("  3. Try using --keep-water flag if crystal waters are important")
+                print("  4. Consider using a different force field")
+                raise RuntimeError(f"Energy minimization failed due to coordinate issues: {e}")
+            else:
+                print(f"❌ Energy minimization failed: {e}")
+                raise
 
         # Write out the minimised PDB.
         with open(self.config.outdir+'/'+'minimised.pdb', 'w') as outfile:

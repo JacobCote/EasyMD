@@ -70,7 +70,7 @@ class Restarter:
             - restart_model.pdb: The protein-ligand complex structure
             - ligand.sdf: The ligand structure file
         """
-        setup = self.setup 
+        setup = self.config.config 
         outdir = self.setup 
         forcefield_kwargs = self.forcefield_kwargs 
 

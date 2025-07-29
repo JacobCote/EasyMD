@@ -70,7 +70,7 @@ END
         
         # Test argument parsing
         parser = argparse.ArgumentParser()
-        with patch('sys.argv', ['test', '--protein', temp_pdb_file, '--steps', '100', '--solvate']):
+        with patch('sys.argv', ['test', '--protein', temp_pdb_file, '--steps', '100', '--solvate','--interval','10']):
             arg_manager = ArgManager(parser)
             config = arg_manager.get_args()
         
@@ -117,13 +117,17 @@ END
         
         parser = argparse.ArgumentParser()
         with patch('sys.argv', ['test', '--protein', 'nonexistent.pdb', '--steps', '100', '--solvate']):
-            arg_manager = ArgManager(parser)
-            config = arg_manager.get_args()
+            with pytest.raises(SystemExit) as e:
+                arg_manager = ArgManager(parser)
+                config = arg_manager.get_args()
+            assert e.type == SystemExit
+            assert e.value.code == 1
             
             # This should handle the missing file gracefully in the system generator
-            with pytest.raises((FileNotFoundError, Exception)):
-                from EasyMD.sysGenerator.sysGenerator import SysGenerator
-                SysGenerator(config)
+        
+
+            
+           
     
     def test_restart_workflow_integration(self):
         """Test restart workflow integration"""
@@ -131,23 +135,61 @@ END
         from EasyMD.sysGenerator.sysGenerator import SysGenerator
         import argparse
         
-        # Create mock restart directory structure
+        # Create mock restart directory structure with all required files
         with tempfile.TemporaryDirectory() as temp_dir:
+            # Create restart_setup.yml
             restart_setup = {
                 'protein_force_field': 'amber14-all.xml',
                 'solvate': True,
-                'water_force_field': 'tip3p.xml'
+                'water_force_field': 'tip3p.xml',
+                'last_state': 0,
+                'temperature': 300,
+                'step_size': 0.002,
+                'friction_coeff': 1.0,
+                'reporting_interval': 1000
             }
             
             setup_file = os.path.join(temp_dir, 'restart_setup.yml')
             with open(setup_file, 'w') as f:
                 yaml.dump(restart_setup, f)
             
-            # Create mock restart model
+            # Create restart_model.pdb
             restart_model = os.path.join(temp_dir, 'restart_model.pdb')
+            restart_pdb_content = """HEADER    RESTART MODEL
+ATOM      1  N   ALA A   1      20.154  16.967  14.365  1.00 20.00           N  
+ATOM      2  CA  ALA A   1      19.030  16.101  14.618  1.00 20.00           C  
+ATOM      3  C   ALA A   1      17.664  16.849  14.897  1.00 20.00           C  
+ATOM      4  O   ALA A   1      17.764  18.067  15.086  1.00 20.00           O  
+END
+"""
             with open(restart_model, 'w') as f:
-                f.write("HEADER TEST\nEND\n")
+                f.write(restart_pdb_content)
             
+            # Create last_state.xml (mock OpenMM state file)
+            last_state_file = os.path.join(temp_dir, 'last_state.xml')
+            last_state_content = """<?xml version="1.0" ?>
+<State version="1" openmmVersion="8.1.1">
+  <Parameters>
+    <Parameter name="t" value="0.0"/>
+  </Parameters>
+  <Positions>
+    <Position x="2.0154" y="1.6967" z="1.4365"/>
+    <Position x="1.9030" y="1.6101" z="1.4618"/>
+    <Position x="1.7664" y="1.6849" z="1.4897"/>
+    <Position x="1.7764" y="1.8067" z="1.5086"/>
+  </Positions>
+  <Velocities>
+    <Velocity x="0.0" y="0.0" z="0.0"/>
+    <Velocity x="0.0" y="0.0" z="0.0"/>
+    <Velocity x="0.0" y="0.0" z="0.0"/>
+    <Velocity x="0.0" y="0.0" z="0.0"/>
+  </Velocities>
+</State>
+"""
+            with open(last_state_file, 'w') as f:
+                f.write(last_state_content)
+            
+            # Test argument parsing with complete restart directory
             parser = argparse.ArgumentParser()
             with patch('sys.argv', ['test', '--restart', temp_dir]):
                 arg_manager = ArgManager(parser)

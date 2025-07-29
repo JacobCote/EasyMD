@@ -149,7 +149,9 @@ ls -la *.pdb
 python -m EasyMD --protein existing_file.pdb --steps 1000 --solvate
 ```
 
-## ⚠️ Common Warnings
+## ⚠️ Common Warnings (Simulation Continues)
+
+Warnings inform you about potentially suboptimal settings but **do not block** the simulation from running.
 
 ### 1. Very Short Simulation
 **Command:**
@@ -157,10 +159,40 @@ python -m EasyMD --protein existing_file.pdb --steps 1000 --solvate
 python -m EasyMD --protein 4zgm.pdb --steps 100 --solvate
 ```
 
-**Warning:**
+**Output:**
 ```
-⚠️  1. Warning: Very short simulation (100 steps). Consider at least 10,000 steps for meaningful results
+════════════════════════════════════════════════════════════
+⚠️  VALIDATION WARNINGS
+════════════════════════════════════════════════════════════
+
+The following issues were detected but won't prevent simulation:
+(Consider reviewing these for optimal results)
+
+⚠️  1. Very short simulation (100 steps). Consider at least 10,000 steps for meaningful results
+
+Found 1 warning(s). Simulation will continue...
+════════════════════════════════════════════════════════════
+
+✅ INPUT VALIDATION COMPLETED WITH WARNINGS
+════════════════════════════════════════════════════════════
+
+Validation passed with 1 warning(s) (see above)
+
+Simulation Configuration Summary:
+----------------------------------------
+Mode: Standard MD Simulation
+Protein: 4zgm.pdb
+Solvation: Explicit (tip3p, padding=10Å)
+Duration: 100 steps
+Temperature: 300 K
+Output: auto-generated directory
+
+════════════════════════════════════════════════════════════
+Proceeding with simulation despite warnings...
+════════════════════════════════════════════════════════════
 ```
+
+**Result:** ✅ Simulation starts despite the warning
 
 ### 2. Unusual Force Field
 **Command:**
@@ -168,10 +200,19 @@ python -m EasyMD --protein 4zgm.pdb --steps 100 --solvate
 python -m EasyMD --protein 4zgm.pdb --steps 1000 --solvate --protein-force-field custom.xml
 ```
 
-**Warning:**
+**Output:**
 ```
-⚠️  1. Warning: Uncommon protein force field 'custom.xml'. Common options: amber14-all.xml, amber99sb-ildn.xml, amber03.xml
+════════════════════════════════════════════════════════════
+⚠️  VALIDATION WARNINGS
+════════════════════════════════════════════════════════════
+
+⚠️  1. Uncommon protein force field 'custom.xml'. Common options: amber14-all.xml, amber99sb-ildn.xml, amber03.xml
+
+Found 1 warning(s). Simulation will continue...
+════════════════════════════════════════════════════════════
 ```
+
+**Result:** ✅ Simulation continues with custom force field
 
 ### 3. Long Ligand Name
 **Command:**
@@ -179,10 +220,62 @@ python -m EasyMD --protein 4zgm.pdb --steps 1000 --solvate --protein-force-field
 python -m EasyMD --protein complex.pdb --ligand VERYLONGNAME --steps 1000 --GBIS
 ```
 
-**Warning:**
+**Output:**
 ```
-⚠️  1. Warning: Ligand name 'VERYLONGNAME' is longer than 4 characters. PDB format typically uses 3-letter codes
+════════════════════════════════════════════════════════════
+⚠️  VALIDATION WARNINGS
+════════════════════════════════════════════════════════════
+
+⚠️  1. Ligand name 'VERYLONGNAME' is longer than 4 characters. PDB format typically uses 3-letter codes
+
+Found 1 warning(s). Simulation will continue...
+════════════════════════════════════════════════════════════
 ```
+
+**Result:** ✅ Simulation continues with long ligand name
+
+### 4. Multiple Warnings
+**Command:**
+```bash
+python -m EasyMD --protein 4zgm.pdb --steps 50 --solvate --temperature 450 --step-size 0.005
+```
+
+**Output:**
+```
+════════════════════════════════════════════════════════════
+⚠️  VALIDATION WARNINGS
+════════════════════════════════════════════════════════════
+
+The following issues were detected but won't prevent simulation:
+(Consider reviewing these for optimal results)
+
+⚠️  1. Very short simulation (50 steps). Consider at least 10,000 steps for meaningful results
+⚠️  2. High temperature (450 K) is outside typical range (250-400 K). Consider if this is intended
+⚠️  3. Large step size (0.005 ps). Consider 0.001-0.002 ps for stability
+
+Found 3 warning(s). Simulation will continue...
+════════════════════════════════════════════════════════════
+
+✅ INPUT VALIDATION COMPLETED WITH WARNINGS
+════════════════════════════════════════════════════════════
+
+Validation passed with 3 warning(s) (see above)
+
+Simulation Configuration Summary:
+----------------------------------------
+Mode: Standard MD Simulation
+Protein: 4zgm.pdb
+Solvation: Explicit (tip3p, padding=10Å)
+Duration: 50 steps
+Temperature: 450 K
+Output: auto-generated directory
+
+════════════════════════════════════════════════════════════
+Proceeding with simulation despite warnings...
+════════════════════════════════════════════════════════════
+```
+
+**Result:** ✅ Simulation continues despite multiple warnings
 
 ## ✅ Successful Validation
 
