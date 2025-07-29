@@ -34,9 +34,10 @@ class ArgManager:
             SystemExit: If argument validation fails during initialization.
         """
         self.parser = parser
-        self._add_config_argument_first()
-        self._parse_config_file_if_provided()
+        # First, add all arguments to the parser
         self._initialize()
+        # Then handle config file processing and parsing
+        self._parse_config_file_if_provided()
         self.args = self.parser.parse_args()
         self._args_sanity_check()
 
@@ -89,54 +90,114 @@ class ArgManager:
         """
         Initialize all command-line arguments for molecular dynamics simulation.
         
-        This method defines all available command-line arguments including:
+        This method defines all available command-line arguments organized into logical groups:
         - Input/output parameters (protein, ligand, output directory)
         - Simulation parameters (steps, temperature, step size, etc.)
         - Solvation options (water models, ions, padding)
         - Force field specifications
         - Special modes (restart, simulated annealing)
         """
-        self.parser.add_argument("-p", "--protein", required=False, help="Protein PDB file")
-        self.parser.add_argument("-l", "--ligand", required=False, help="Ligand name in pdb file (often LIG)")
-        self.parser.add_argument("-o", "--outdir", default=None, help="Output directory name")
-        self.parser.add_argument("-s", "--steps", type=int, default=None, help="Number of simulation steps")
-        self.parser.add_argument("-z", "--step-size", type=float, default=0.002, help="Step size (ps)")
-        self.parser.add_argument("-f", "--friction-coeff", type=float, default=1, help="Friction coefficient (ps)")
-        self.parser.add_argument("-i", "--interval", type=int, default=1000, help="Reporting interval")
-        self.parser.add_argument("-t", "--temperature", type=int, default=300, help="Temperature (K)")
-        self.parser.add_argument("--solvate", action='store_true', help="Add solvent box")
-        self.parser.add_argument("--GBIS", action='store_true', help="Use Generalized Born implicit solvent")
-        self.parser.add_argument("--padding", type=float, default=10, help="Padding for solvent box (Å)")
-        self.parser.add_argument("--water-model", default="tip3p",
-                            choices=["tip3p", "spce", "tip4pew", "tip5p", "swm4ndp"],
-                            help="Water model for solvation")
-        self.parser.add_argument("--positive-ion", default="Na+", help="Positive ion for solvation")
-        self.parser.add_argument("--negative-ion", default="Cl-", help="Negative ion for solvation")
-        self.parser.add_argument("--ionic-strength", type=float, default=0.1, help="Ionic strength")
-        self.parser.add_argument("--no-neutralize", action='store_true', help="Do not add neutralizing ions")
-        self.parser.add_argument("-e", "--equilibration-steps", type=int, default=200, help="Equilibration steps")
-        self.parser.add_argument("--protein-force-field", default='amber14-all.xml', help="Protein force field")
-        self.parser.add_argument("--ligand-force-field", default='openff-2.2.0', help="Ligand force field")
-        self.parser.add_argument("--water-force-field", default='amber/tip3p_standard.xml', help="Water force field")
-        self.parser.add_argument("--remove", nargs='*', default=['DMS'], help="Molecules to remove (e.g. DMS LIG)")
-        self.parser.add_argument("--keep-water", action='store_true', help="Keep water molecules from PDB (default: remove)")
-        self.parser.add_argument("--ph", type=float, default=7.0, help="Protonation pH")
-        self.parser.add_argument("-r","--restart", type=str, default=None, help="Use restart mode, must give the directory to restart from")
-        self.parser.add_argument("--clock", type=int, default=None, help="Run simulation based on wall time (min)")
-        self.parser.add_argument("--simulated-annealing", action='store_true', default=False, help="Run simulated annealing")
+        # Configuration and version arguments
+        self.parser.add_argument("-c", "--config", type=str, help="Path to YAML config file", required=False)
+        self.parser.add_argument("--version", action="version", version="EasyMD 1.0.0", 
+                                help="Show program version and exit")
         
-        # Missing residue handling options
-        self.parser.add_argument("--missing-residues", default="auto", 
-                            choices=["auto", "none", "non-terminal", "terminal-only", "all"],
-                            help="Strategy for adding missing residues: auto (default), none (skip all), non-terminal (only internal), terminal-only (only ends), all (add everything)")
-        self.parser.add_argument("--max-terminal-residues", type=int, default=5,
-                            help="Maximum number of missing residues to add at terminal ends (default: 5)")
-        self.parser.add_argument("--terminal-residue-types", nargs='*', default=['ACE', 'NME', 'NH2', 'COOH'],
-                            help="Allowed terminal residue types to add (default: ACE NME NH2 COOH)")
-        self.parser.add_argument("--skip-missing-loops", action='store_true', default=False,
-                            help="Skip adding missing residues in loop regions (may cause gaps)")
-        self.parser.add_argument("--conservative-missing", action='store_true', default=False,
-                            help="Use conservative approach: only add missing residues with high confidence")
+        # Input/Output parameters
+        io_group = self.parser.add_argument_group('Input/Output', 'File paths and output options')
+        io_group.add_argument("-p", "--protein", required=False, 
+                             help="Path to protein PDB file (required for new simulations)")
+        io_group.add_argument("-l", "--ligand", required=False, 
+                             help="Ligand residue name as it appears in PDB (e.g., LIG, MOL, ATP)")
+        io_group.add_argument("-o", "--outdir", default=None, 
+                             help="Output directory (auto-generated if not specified)")
+        
+        # Simulation parameters
+        sim_group = self.parser.add_argument_group('Simulation Parameters', 'Core simulation settings')
+        sim_group.add_argument("-s", "--steps", type=int, default=None, 
+                              help="Number of simulation steps (mutually exclusive with --clock)")
+        sim_group.add_argument("-z", "--step-size", type=float, default=0.002, 
+                              help="Integration step size in picoseconds (default: 0.002 ps)")
+        sim_group.add_argument("-f", "--friction-coeff", type=float, default=1, 
+                              help="Langevin friction coefficient in 1/ps (default: 1.0)")
+        sim_group.add_argument("-i", "--interval", type=int, default=1000, 
+                              help="Reporting interval for trajectory and log output (default: 1000)")
+        sim_group.add_argument("-t", "--temperature", type=int, default=300, 
+                              help="Simulation temperature in Kelvin (default: 300 K)")
+        sim_group.add_argument("-e", "--equilibration-steps", type=int, default=200, 
+                              help="Number of equilibration steps before production (default: 200)")
+        
+        # Solvation options (mutually exclusive)
+        solvation_group = self.parser.add_mutually_exclusive_group()
+        solvation_group.add_argument("--solvate", action='store_true', 
+                                   help="Use explicit solvent with periodic boundary conditions")
+        solvation_group.add_argument("--GBIS", action='store_true', 
+                                   help="Use Generalized Born implicit solvent (faster, less accurate)")
+        
+        # Solvation parameters
+        solv_params_group = self.parser.add_argument_group('Solvation Parameters', 
+                                                           'Options for explicit solvation')
+        solv_params_group.add_argument("--padding", type=float, default=10, 
+                                      help="Solvent box padding around protein in Angstroms (default: 10 Å)")
+        solv_params_group.add_argument("--water-model", default="tip3p",
+                                      choices=["tip3p", "spce", "tip4pew", "tip5p", "swm4ndp"],
+                                      help="Water model for explicit solvation (default: tip3p)")
+        solv_params_group.add_argument("--positive-ion", default="Na+", 
+                                      help="Positive ion type for neutralization (default: Na+)")
+        solv_params_group.add_argument("--negative-ion", default="Cl-", 
+                                      help="Negative ion type for neutralization (default: Cl-)")
+        solv_params_group.add_argument("--ionic-strength", type=float, default=0.1, 
+                                      help="Target ionic strength in Molar (default: 0.1 M)")
+        solv_params_group.add_argument("--no-neutralize", action='store_true', 
+                                      help="Skip automatic system neutralization")
+        
+        # Force field parameters
+        ff_group = self.parser.add_argument_group('Force Fields', 'Force field selection and parameters')
+        ff_group.add_argument("--protein-force-field", default='amber14-all.xml', 
+                             help="Protein force field (default: amber14-all.xml)")
+        ff_group.add_argument("--ligand-force-field", default='openff-2.2.0', 
+                             help="Small molecule force field (default: openff-2.2.0)")
+        ff_group.add_argument("--water-force-field", default='amber/tip3p_standard.xml', 
+                             help="Water force field (default: amber/tip3p_standard.xml)")
+        
+        # Structure preparation
+        prep_group = self.parser.add_argument_group('Structure Preparation', 
+                                                    'Options for preparing input structures')
+        prep_group.add_argument("--remove", nargs='*', default=['DMS'], 
+                               help="Molecule names to remove from structure (default: ['DMS'])")
+        prep_group.add_argument("--keep-water", action='store_true', 
+                               help="Preserve crystal water molecules from PDB (default: remove all water)")
+        prep_group.add_argument("--ph", type=float, default=7.0, 
+                               help="pH for protonation state assignment (default: 7.0)")
+        
+        # Advanced options
+        advanced_group = self.parser.add_argument_group('Advanced Options', 
+                                                        'Special simulation modes and restart options')
+        advanced_group.add_argument("-r","--restart", type=str, default=None, 
+                                   help="Restart simulation from specified directory containing state files")
+        advanced_group.add_argument("--clock", type=int, default=None, 
+                                   help="Simulation time duration in minutes - alternative to --steps")
+        advanced_group.add_argument("--simulated-annealing", action='store_true', default=False, 
+                                   help="Use simulated annealing protocol instead of standard MD")
+        
+        # Missing residue handling
+        missing_group = self.parser.add_argument_group('Missing Residue Handling', 
+                                                       'Options for handling incomplete protein structures')
+        missing_group.add_argument("--missing-residues", default="auto", 
+                                  choices=["auto", "none", "non-terminal", "terminal-only", "all"],
+                                  help="Strategy for handling missing residues:\n"
+                                       "  auto: Automatic detection (recommended)\n"
+                                       "  none: Skip all missing residues\n"
+                                       "  non-terminal: Add only internal missing residues\n"
+                                       "  terminal-only: Add only N/C-terminal residues\n"
+                                       "  all: Add all detected missing residues")
+        missing_group.add_argument("--max-terminal-residues", type=int, default=5,
+                                  help="Maximum number of terminal residues to add per chain (default: 5)")
+        missing_group.add_argument("--terminal-residue-types", nargs='*', default=['ACE', 'NME', 'NH2', 'COOH'],
+                                  help="Allowed terminal residue types (default: ACE, NME, NH2, COOH)")
+        missing_group.add_argument("--skip-missing-loops", action='store_true', default=False,
+                                  help="Skip adding missing residues in likely loop regions (>3 consecutive)")
+        missing_group.add_argument("--conservative-missing", action='store_true', default=False,
+                                  help="Use conservative approach - only add well-defined missing residues")
 
     def get_args(self):
         return self.args

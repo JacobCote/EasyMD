@@ -155,7 +155,7 @@ def test_validation_system():
         print("\n3. Testing conflicting parameters...")
         try:
             original_argv = sys.argv.copy()
-            sys.argv = ["test", "--protein", "test.pdb", "--steps", "1000", "--clock", "60", "--solvate"]
+            sys.argv = ["test", "--protein", "src/EasyMD/tests/data/test.pdb", "--steps", "1000", "--clock", "60", "--solvate"]
             
             parser = argparse.ArgumentParser()
             manager = ArgManager(parser)

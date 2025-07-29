@@ -1,8 +1,13 @@
 import pytest
 import tempfile
 import os
+import sys
 import yaml
 from unittest.mock import Mock, patch, MagicMock
+
+# Add the test directory to path for importing test utilities
+sys.path.append(os.path.dirname(__file__))
+from test_data_utils import get_test_pdb_path
 
 
 class TestIntegration:
@@ -32,7 +37,7 @@ END
     def temp_config_file(self):
         """Create a temporary config file"""
         config_data = {
-            'protein': 'test.pdb',
+            'protein': get_test_pdb_path(),
             'steps': 100,
             'temperature': 300,
             'solvate': True,
@@ -103,7 +108,7 @@ END
             arg_manager = ArgManager(parser)
             config = arg_manager.get_args()
         
-        assert config.protein == 'test.pdb'
+        assert config.protein == get_test_pdb_path()
         assert config.steps == 100
         assert config.temperature == 300
         assert config.solvate is True

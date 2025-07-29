@@ -1,6 +1,6 @@
 # example config.yml file with default params
 
-protein: 4zgm.pdb
+protein: src/EasyMD/tests/data/4zgm.pdb
 steps: 2000
 step_size: 0.002
 friction_coeff: 1

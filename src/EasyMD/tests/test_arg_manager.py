@@ -2,9 +2,14 @@ import pytest
 import argparse
 import tempfile
 import os
+import sys
 import yaml
 from unittest.mock import patch, mock_open
 from EasyMD.argManager.manager import ArgManager
+
+# Add the test directory to path for importing test utilities
+sys.path.append(os.path.dirname(__file__))
+from test_data_utils import get_test_pdb_path
 
 
 class TestArgManager:
@@ -19,7 +24,7 @@ class TestArgManager:
     def sample_config_data(self):
         """Sample configuration data for testing"""
         return {
-            'protein': 'test.pdb',
+            'protein': get_test_pdb_path(),
             'ligand': 'LIG',
             'steps': 1000,
             'temperature': 300,
@@ -37,10 +42,11 @@ class TestArgManager:
     
     def test_init_without_config(self, basic_parser):
         """Test ArgManager initialization without config file"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate']):
             manager = ArgManager(basic_parser)
             args = manager.get_args()
-            assert args.protein == 'test.pdb'
+            assert args.protein == test_pdb
             assert args.steps == 1000
             assert args.solvate is True
     
@@ -51,18 +57,20 @@ class TestArgManager:
     
     def test_keep_water_argument_default(self, basic_parser):
         """Test that keep_water argument has correct default value"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate']):
             manager = ArgManager(basic_parser)
             args = manager.get_args()
             assert args.keep_water is False
     
     def test_keep_water_argument_flag(self, basic_parser):
         """Test that --keep-water flag sets keep_water to True"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate', '--keep-water']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate', '--keep-water']):
             manager = ArgManager(basic_parser)
             args = manager.get_args()
             assert args.keep_water is True
-            assert args.protein == 'test.pdb'
+            assert args.protein == test_pdb
             assert args.steps == 1000
             assert args.solvate is True
     
@@ -72,11 +80,12 @@ class TestArgManager:
             manager = ArgManager(basic_parser)
             args = manager.get_args()
             assert args.steps == 2000  # CLI should override config
-            assert args.protein == 'test.pdb'  # Config value should remain
+            assert args.protein == get_test_pdb_path()  # Config value should remain
     
     def test_default_values(self, basic_parser):
         """Test default argument values"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate']):
             manager = ArgManager(basic_parser)
             args = manager.get_args()
             assert args.step_size == 0.002
@@ -88,25 +97,29 @@ class TestArgManager:
     
     def test_sanity_check_both_steps_and_clock(self, basic_parser):
         """Test sanity check fails when both steps and clock are provided"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--clock', '60', '--solvate']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--clock', '60', '--solvate']):
             with pytest.raises(SystemExit):
                 ArgManager(basic_parser)
     
     def test_sanity_check_neither_steps_nor_clock(self, basic_parser):
         """Test sanity check fails when neither steps nor clock are provided"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--solvate']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--solvate']):
             with pytest.raises(SystemExit):
                 ArgManager(basic_parser)
     
     def test_sanity_check_both_solvate_and_gbis(self, basic_parser):
         """Test sanity check fails when both solvate and GBIS are provided"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate', '--GBIS']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate', '--GBIS']):
             with pytest.raises(SystemExit):
                 ArgManager(basic_parser)
     
     def test_sanity_check_neither_solvate_nor_gbis(self, basic_parser):
         """Test sanity check fails when neither solvate nor GBIS are provided"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000']):
             with pytest.raises(SystemExit):
                 ArgManager(basic_parser)
     
@@ -114,14 +127,16 @@ class TestArgManager:
     @pytest.mark.parametrize("water_model", ["tip3p", "spce", "tip4pew", "tip5p", "swm4ndp"])
     def test_water_model_choices(self, basic_parser, water_model):
         """Test valid water model choices"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate', '--water-model', water_model]):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate', '--water-model', water_model]):
             manager = ArgManager(basic_parser)
             args = manager.get_args()
             assert args.water_model == water_model
     
     def test_remove_molecules_list(self, basic_parser):
         """Test remove molecules argument accepts multiple values"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate', '--remove', 'DMS', 'LIG', 'WAT']):
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate', '--remove', 'DMS', 'LIG', 'WAT']):
             manager = ArgManager(basic_parser)
             args = manager.get_args()
             assert args.remove == ['DMS', 'LIG', 'WAT']

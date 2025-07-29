@@ -107,7 +107,7 @@ def main():
     if len(sys.argv) != 2:
         print("Usage: python test_your_structure.py <pdb_file>")
         print("\nExample:")
-        print("  python test_your_structure.py 4zgm.pdb")
+        print("  python test_your_structure.py src/EasyMD/tests/data/4zgm.pdb")
         print("  python test_your_structure.py your_protein.pdb")
         sys.exit(1)
     

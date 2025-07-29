@@ -1,8 +1,13 @@
 import pytest
 import tempfile
 import os
+import sys
 from unittest.mock import Mock, patch, MagicMock, mock_open
 from EasyMD.sysGenerator.sysGenerator import SysGenerator
+
+# Add the test directory to path for importing test utilities
+sys.path.append(os.path.dirname(__file__))
+from test_data_utils import get_test_pdb_path
 
 
 class TestSysGenerator:
@@ -14,7 +19,7 @@ class TestSysGenerator:
         config = Mock()
         config.restart = None
         config.outdir = None
-        config.protein = 'test.pdb'
+        config.protein = get_test_pdb_path()
         config.ligand = None
         config.remove = ['DMS']
         config.solvate = True
@@ -46,7 +51,7 @@ class TestSysGenerator:
         config = Mock()
         config.restart = None
         config.outdir = 'test_out'
-        config.protein = 'test.pdb'
+        config.protein = get_test_pdb_path()
         config.ligand = 'LIG'
         config.ligand_force_field = 'openff-2.2.0'
         config.remove = ['DMS']

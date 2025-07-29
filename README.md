@@ -1,10 +1,19 @@
 # EasyMD
 
-Welcome to EasyMD, a Python package for simulating complex molecular systems using OpenMM. With EasyMD, you can easily perform molecular dynamics simulations and explore the behavior of biomolecules in different environments.
+Welcome to EasyMD, a comprehensive Python package for molecular dynamics simulations using OpenMM. EasyMD simplifies the process of setting up and running molecular dynamics simulations, allowing you to explore the behavior of biomolecules in different environments with ease.
 
-With EasyMD, you can easily create explicit or implicit solvent simulations. EasyMD can also simulate protein-ligand complexes and protein-DNA complexes from a pdb file.
+## Key Features
 
-For more info on EasyMD see [here](#more-info-on-easymd-simulations)
+- **Easy-to-use command-line interface** with comprehensive help and validation
+- **Flexible solvation options**: explicit solvent with periodic boundary conditions or implicit solvent (GBIS)
+- **Protein-ligand complex simulations** with automatic ligand parameterization
+- **Robust structure preparation** including missing residue handling and protonation state assignment
+- **Multiple force field support** (Amber, CHARMM, OpenFF)
+- **Restart capabilities** for long simulations
+- **Comprehensive validation system** with helpful error messages and warnings
+- **GPU acceleration** via CUDA when available
+
+For detailed information on EasyMD simulations, see [More Info](#more-info-on-easymd-simulations)
 ## Installation
 To install EasyMD, simply run the following commands:
 ```bash
@@ -17,98 +26,212 @@ conda install -c conda-forge openmm cudatoolkit=11.8
 ```
 
 ## Usage
-To use EasyMD, you can run the `simulate.py` script with the following options:
+
+EasyMD provides a comprehensive command-line interface with organized argument groups and detailed help. Run EasyMD as a Python module:
+
 ```bash
-usage: simulate.py [-h] [-p PROTEIN] [-l LIGAND] [-o OUTPUT] [-s STEPS]
-        [-z STEP_SIZE] [-f FRICTION_COEFF] [-i INTERVAL]
-        [-t TEMPERATURE] [--solvate] [--GBIS]
-        [--padding PADDING]
-        [--water-model]
-        [--positive-ion POSITIVE_ION]
-        [--negative-ion NEGATIVE_ION]
-        [--ionic-strength IONIC_STRENGTH] [--no-neutralize]
-        [-e EQUILIBRATION_STEPS]
-        [--protein-force-field PROTEIN_FORCE_FIELD]
-        [--ligand-force-field LIGAND_FORCE_FIELD]
-        [--water-force-field WATER_FORCE_FIELD]
-        [--remove [REMOVE ...]] [--ph PH] [--restart]
-        [--restart_dir RESTART_DIR] [--clock CLOCK]
-        [--simulated-annealing]
+python -m EasyMD [options]
 ```
 
-You can customize the simulation by providing the necessary options. Here are some of the available options:
+### Getting Help
 
-- `-p, --protein`: Specify the protein PDB file.
-- `-l, --ligand`: Specify the ligand name in the PDB file.
-- `-o, --output`: Specify the base name for output files.
-- `-s, --steps`: Specify the number of simulation steps.
-- `-z, --step-size`: Specify the step size in ps.
-- `-f, --friction-coeff`: Specify the friction coefficient in ps.
-- `-i, --interval`: Specify the reporting interval.
-- `-t, --temperature`: Specify the temperature in K.
-- `--solvate`: Add a solvent box to the system.
-- `--GBIS`: Use Born generalize implicit solvent instead of adding a solvent box.
-- `--padding`: Specify the padding for the solvent box in A.
-- `--water-model`: Specify the water model for solvation.
-- `--positive-ion`: Specify the positive ion for solvation.
-- `--negative-ion`: Specify the negative ion for solvation.
-- `--ionic-strength`: Specify the ionic strength for solvation.
-- `--no-neutralize`: Do not add ions to neutralize the system.
-- `-e, --equilibration-steps`: Specify the number of equilibration steps.
-- `--protein-force-field`: Specify the protein force field.
-- `--ligand-force-field`: Specify the ligand force field.
-- `--water-force-field`: Specify the water force field.
-- `--remove`: Specify molecules to remove from the system.
-- `--ph`: Specify the pH for the protonation state of the residues.
-- `--restart`: Use the restart files for simulation.
-- `--restart_dir`: Specify the path to the restart files.
-- `--simulated-annealing`: starts a simulated annealing simulation.
-- `--clock`: Run the simulation based on clock time instead of steps, which can be a good option when running on clusters. You need to take into account time for system creation, minimization and equilibration since the clock argument only applies to the simulation.
-
-By default, EasyMD uses the following settings:
-- Protein: No default
-- Ligand: `None`
-- Output: `out_X`
-- Steps: `10000`
-- Step size: `2.0`
-- Friction coefficient: `1.0`
-- Reporting interval: `1000`
-- Temperature: `300 K`
-- Solvate: `False`
-- GBIS: `False`
-- Padding: `10 A`
-- Water model: `tip3p`
-- Positive ion: `Na+`
-- Negative ion: `Cl-`
-- Ionic strength: `0.1`
-- Neutralize: `True`
-- Equilibration steps: `200`
-- Protein force field: `amber14-all.xml`
-- Ligand force field: `openff-2.2.0` (take note that GAFF forcefield is not available at this time. See https://github.com/openmm/openmmforcefields/releases/tag/0.13.0  )
-- Water force field: `tip3p`
-- Remove: `['DMS']`
-- pH: `7.0`
-- Restart: `False`
-- Restart directory: `None`
-- Clock: `False`
-- Simulated annealing: `False`
-
-Feel free to explore and experiment with different options to suit your needs.
-
-To explore available forcefields, check [here](https://ommprotocol.readthedocs.io/en/latest/forcefields.html).
-
-For now, systems with DNA coming from AlphaFold3 only work with the amber14 forcefield.
-
-There are examples provided in the `examples` folder to setup a simulation on clusters (you need to move the scripts to the root directory of EasyMD).
-
-#### Here is a basic example for an explicit solvent simulation, which will run for 60 minutes:
+For comprehensive help with all available options:
 ```bash
-python3 simulate.py --protein test.pdb --ligand GNP -o test_explicit --solvate --clock 60
+python -m EasyMD --help
 ```
-At the end of the 60 minutes, a restart setup file will be created. It is possible to restart the simulation for 60 minutes from the last state by specifying the output directory of the initial simulation:
+
+For version information:
 ```bash
-python3 simulate.py --restart  -restart_dir test_explicit --clock 60
+python -m EasyMD --version
 ```
+
+### Quick Start Examples
+
+**Basic protein simulation (explicit solvent):**
+```bash
+python -m EasyMD --protein protein.pdb --steps 5000000 --solvate
+```
+
+**Protein-ligand complex:**
+```bash
+python -m EasyMD --protein complex.pdb --ligand ATP --steps 10000000 --solvate --temperature 310
+```
+
+**Fast implicit solvent simulation:**
+```bash
+python -m EasyMD --protein protein.pdb --steps 1000000 --GBIS
+```
+
+**Time-based simulation:**
+```bash
+python -m EasyMD --protein protein.pdb --clock 60 --solvate
+```
+
+**Using configuration file:**
+```bash
+python -m EasyMD --config simulation.yml
+```
+
+**Restart simulation:**
+```bash
+python -m EasyMD --restart out_0/
+```
+
+### Argument Groups
+
+EasyMD organizes arguments into logical groups for better usability:
+
+**Input/Output:**
+- `-p, --protein`: Path to protein PDB file (required for new simulations)
+- `-l, --ligand`: Ligand residue name as it appears in PDB (e.g., LIG, MOL, ATP)
+- `-o, --outdir`: Output directory (auto-generated if not specified)
+
+**Simulation Parameters:**
+- `-s, --steps`: Number of simulation steps (mutually exclusive with --clock)
+- `-z, --step-size`: Integration step size in picoseconds (default: 0.002 ps)
+- `-f, --friction-coeff`: Langevin friction coefficient in 1/ps (default: 1.0)
+- `-i, --interval`: Reporting interval for trajectory and log output (default: 1000)
+- `-t, --temperature`: Simulation temperature in Kelvin (default: 300 K)
+- `-e, --equilibration-steps`: Number of equilibration steps before production (default: 200)
+
+**Solvation (choose one):**
+- `--solvate`: Use explicit solvent with periodic boundary conditions
+- `--GBIS`: Use Generalized Born implicit solvent (faster, less accurate)
+
+**Solvation Parameters:**
+- `--padding`: Solvent box padding around protein in Angstroms (default: 10 Å)
+- `--water-model`: Water model for explicit solvation (default: tip3p)
+- `--positive-ion`: Positive ion type for neutralization (default: Na+)
+- `--negative-ion`: Negative ion type for neutralization (default: Cl-)
+- `--ionic-strength`: Target ionic strength in Molar (default: 0.1 M)
+- `--no-neutralize`: Skip automatic system neutralization
+
+**Force Fields:**
+- `--protein-force-field`: Protein force field (default: amber14-all.xml)
+- `--ligand-force-field`: Small molecule force field (default: openff-2.2.0)
+- `--water-force-field`: Water force field (default: amber/tip3p_standard.xml)
+
+**Structure Preparation:**
+- `--remove`: Molecule names to remove from structure (default: ['DMS'])
+- `--keep-water`: Preserve crystal water molecules from PDB (default: remove all water)
+- `--ph`: pH for protonation state assignment (default: 7.0)
+
+**Advanced Options:**
+- `-r, --restart`: Restart simulation from specified directory containing state files
+- `--clock`: Simulation time duration in minutes - alternative to --steps
+- `--simulated-annealing`: Use simulated annealing protocol instead of standard MD
+
+**Missing Residue Handling:**
+- `--missing-residues`: Strategy for handling missing residues (auto, none, non-terminal, terminal-only, all)
+- `--max-terminal-residues`: Maximum number of terminal residues to add per chain (default: 5)
+- `--conservative-missing`: Use conservative approach for missing residues
+
+### Configuration Files
+
+EasyMD supports YAML configuration files for complex setups:
+
+```yaml
+# simulation.yml
+protein: "protein.pdb"
+ligand: "ATP"
+steps: 10000000
+temperature: 310
+solvate: true
+ionic_strength: 0.15
+keep_water: true
+missing_residues: "terminal-only"
+```
+
+Run with: `python -m EasyMD --config simulation.yml`
+
+### Output Files
+
+EasyMD generates the following output files:
+- **Trajectory files**: `output_traj_*.dcd` - simulation trajectories
+- **Log file**: `log.txt` - energies, temperature, and other properties
+- **Final structure**: `last_state_*.pdb` - final system configuration
+- **System topology**: `topology.pkl` - pickled OpenMM topology
+- **Restart files**: `last_state.xml`, `restart_setup.yml` - for continuing simulations
+
+### Validation and Error Handling
+
+EasyMD includes a comprehensive validation system that:
+- **Validates input parameters** before starting simulations
+- **Provides clear error messages** with suggested fixes
+- **Shows warnings** for potentially problematic settings
+- **Displays configuration summary** before starting
+
+### Force Fields and Compatibility
+
+- **Protein force fields**: Amber (amber14-all.xml, amber99sb-ildn.xml), CHARMM (charmm36.xml)
+- **Ligand force fields**: OpenFF (openff-2.2.0, recommended), GAFF
+- **Water models**: TIP3P (default), SPC/E, TIP4P-Ew, TIP5P
+- **DNA systems**: AlphaFold3 structures work best with Amber14 force field
+
+For available force fields, see the [OpenMM Force Fields documentation](https://ommprotocol.readthedocs.io/en/latest/forcefields.html).
+
+### Cluster Usage
+
+Example scripts for cluster usage are provided in the `examples/` folder. These demonstrate how to set up simulations on HPC systems with proper resource allocation and job management.
+
+## Testing
+
+EasyMD includes a comprehensive test suite to ensure reliability:
+
+```bash
+# Run all tests
+python -m pytest src/EasyMD/tests/
+
+# Run specific test categories
+python -m pytest src/EasyMD/tests/test_arg_manager.py  # Argument parsing tests
+python -m pytest src/EasyMD/tests/test_validation.py   # Validation system tests
+python -m pytest src/EasyMD/tests/test_integration.py  # Integration tests
+```
+
+Test data files are organized in `src/EasyMD/tests/data/` for clean separation from the main codebase.
+
+## Troubleshooting
+
+### Common Issues
+
+**Missing protein file error:**
+```bash
+❌ Protein PDB file is required. Use --protein <file.pdb>
+```
+**Solution:** Provide a valid PDB file path: `--protein your_protein.pdb`
+
+**Solvation method not specified:**
+```bash
+❌ Must choose exactly one solvation method: either --solvate OR --GBIS
+```
+**Solution:** Choose either explicit (`--solvate`) or implicit (`--GBIS`) solvation
+
+**Conflicting duration methods:**
+```bash
+❌ Cannot specify both --steps and --clock. Choose one simulation duration method
+```
+**Solution:** Use either `--steps 10000` OR `--clock 60` (not both)
+
+### Getting Detailed Help
+
+For parameter-specific help and examples:
+```bash
+python -m EasyMD --help | grep -A5 "missing-residues"  # Help for specific option
+```
+
+### Validation Messages
+
+EasyMD provides detailed validation with:
+- ✅ **Success messages** with configuration summary
+- ⚠️ **Warnings** for potentially problematic settings (simulation continues)
+- ❌ **Errors** with specific fixes required (simulation stops)
+
+### Performance Tips
+
+- Use `--GBIS` for faster simulations (less accurate)
+- Use `--solvate` for production simulations (more accurate, slower)
+- Adjust `--interval` to control output frequency
+- Use `--clock` for time-limited cluster jobs
 
 ## More info on EasyMD simulations
 EasyMD will automatically build a system and run the simulation based on the options provided. Protonation states of amino acids will be determined from the ph of the system. Disulfide bonds will be predicted based on proximity and orientation of Cys residus.

@@ -6,7 +6,12 @@ This script shows various validation scenarios and error messages.
 
 import sys
 import argparse
+import os
 from EasyMD.argManager.manager import ArgManager
+
+# Add the test directory to path for importing test utilities
+sys.path.append(os.path.dirname(__file__))
+from test_data_utils import get_test_pdb_path, get_4zgm_pdb_path
 
 def test_validation_scenarios():
     """Test various validation scenarios to demonstrate the enhanced error handling."""
@@ -19,27 +24,27 @@ def test_validation_scenarios():
         },
         {
             "name": "Both steps and clock specified",
-            "args": ["--protein", "test.pdb", "--steps", "1000", "--clock", "60", "--solvate"],
+            "args": ["--protein", get_test_pdb_path(), "--steps", "1000", "--clock", "60", "--solvate"],
             "expected": "Should fail - conflicting duration methods"
         },
         {
             "name": "No solvation method",
-            "args": ["--protein", "test.pdb", "--steps", "1000"],
+            "args": ["--protein", get_test_pdb_path(), "--steps", "1000"],
             "expected": "Should fail - no solvation method specified"
         },
         {
             "name": "Both solvation methods",
-            "args": ["--protein", "test.pdb", "--steps", "1000", "--solvate", "--GBIS"],
+            "args": ["--protein", get_test_pdb_path(), "--steps", "1000", "--solvate", "--GBIS"],
             "expected": "Should fail - conflicting solvation methods"
         },
         {
             "name": "Invalid temperature",
-            "args": ["--protein", "test.pdb", "--steps", "1000", "--solvate", "--temperature", "-100"],
+            "args": ["--protein", get_test_pdb_path(), "--steps", "1000", "--solvate", "--temperature", "-100"],
             "expected": "Should fail - negative temperature"
         },
         {
             "name": "Very short simulation",
-            "args": ["--protein", "test.pdb", "--steps", "10", "--solvate"],
+            "args": ["--protein", get_test_pdb_path(), "--steps", "10", "--solvate"],
             "expected": "Should warn - very short simulation"
         },
         {
@@ -83,7 +88,7 @@ def create_sample_config_files():
     # Valid configuration
     valid_config = """
 # EasyMD Configuration File
-protein: "4zgm.pdb"
+protein: "src/EasyMD/tests/data/4zgm.pdb"
 ligand: "LIG"
 steps: 10000
 temperature: 300

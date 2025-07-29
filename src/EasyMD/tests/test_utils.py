@@ -43,7 +43,7 @@ class TestUtils:
         mock_modeller.positions = Mock()
         
         with patch('builtins.open', mock_open()) as mock_file:
-            PDBwrite_all(mock_modeller, "test.pdb")
+            PDBwrite_all(mock_modeller, "test_output.pdb")
             
             # Should open file twice (once for writing, once for appending footer)
             assert mock_file.call_count >= 1

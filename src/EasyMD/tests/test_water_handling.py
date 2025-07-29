@@ -2,9 +2,14 @@ import pytest
 import argparse
 import tempfile
 import os
+import sys
 from unittest.mock import Mock, patch, MagicMock
 from EasyMD.argManager.manager import ArgManager
 from EasyMD.sysGenerator.sysGenerator import SysGenerator
+
+# Add the test directory to path for importing test utilities
+sys.path.append(os.path.dirname(__file__))
+from test_data_utils import get_test_pdb_path
 
 
 class TestWaterHandling:
@@ -134,7 +139,7 @@ END
                         with patch('EasyMD.sysGenerator.sysGenerator.deletePcap', return_value=mock_modeller):
                             try:
                                 sys_gen._prep_prot(
-                                    pdb_in='test.pdb',
+                                    pdb_in=get_test_pdb_path(),
                                     list_of_molecules_to_remove=['DMS'],
                                     solvate=False,
                                     protein_force_field='amber14-all.xml',
@@ -203,7 +208,7 @@ END
                         with patch('EasyMD.sysGenerator.sysGenerator.deletePcap', return_value=mock_modeller):
                             try:
                                 sys_gen._prep_prot(
-                                    pdb_in='test.pdb',
+                                    pdb_in=get_test_pdb_path(),
                                     list_of_molecules_to_remove=['DMS'],
                                     solvate=False,
                                     protein_force_field='amber14-all.xml',
@@ -322,16 +327,26 @@ END
     
     def test_keep_water_help_text(self, basic_parser):
         """Test that the help text for keep_water is correct"""
-        with patch('sys.argv', ['test', '--protein', 'test.pdb', '--steps', '1000', '--solvate']):
-            manager = ArgManager(basic_parser)
+        test_pdb = get_test_pdb_path()
+        
+        # We need to suppress the validation output and SystemExit for this test
+        # since we just want to check the help text after arguments are added
+        with patch('sys.argv', ['test', '--help']):
+            with patch('sys.stdout'), patch('sys.stderr'):
+                try:
+                    manager = ArgManager(basic_parser)
+                except SystemExit:
+                    # Expected when --help is used
+                    pass
             
-            # Get the help text
-            help_text = manager.parser.format_help()
+            # Get the help text after arguments have been added
+            help_text = basic_parser.format_help()
             
             # Check that the keep-water option is documented
             assert '--keep-water' in help_text
-            assert 'Keep water molecules from PDB' in help_text
-            assert 'default: remove' in help_text
+            assert 'Preserve crystal water molecules from PDB' in help_text
+            # Check for the default text (might have slight formatting differences)
+            assert 'default:' in help_text and 'remove all water' in help_text
     
     def test_keep_water_with_solvation(self):
         """Test that keep_water option is compatible with solvation"""
