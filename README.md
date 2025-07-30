@@ -82,6 +82,11 @@ python -m EasyMD --restart out_0/
 python -m EasyMD analyze out_0/ --rmsd --rmsf --save-data
 ```
 
+**Get PDB structure information:**
+```bash
+python -m EasyMD info protein.pdb
+```
+
 ### Argument Groups
 
 EasyMD organizes arguments into logical groups for better usability:
@@ -283,6 +288,133 @@ The analysis module includes comprehensive validation:
 - **Parameter validation**: Ensures analysis parameters are reasonable
 - **Error handling**: Clear error messages with suggested fixes
 - **Progress reporting**: Real-time analysis progress and statistics
+
+## PDB Structure Information
+
+EasyMD includes a comprehensive PDB structure analysis tool that provides detailed information about protein structures before running simulations. This helps users understand their structures and identify potential issues.
+
+### Info Usage
+
+Run PDB structure analysis using the `info` subcommand:
+
+```bash
+python -m EasyMD info [pdb_file] [options]
+```
+
+### Info Help
+
+For comprehensive info help:
+```bash
+python -m EasyMD info --help
+```
+
+### Info Examples
+
+**Basic structure analysis:**
+```bash
+python -m EasyMD info protein.pdb
+```
+
+**Custom output file:**
+```bash
+python -m EasyMD info protein.pdb --output protein_analysis.info
+```
+
+**Summary format only:**
+```bash
+python -m EasyMD info protein.pdb --format summary
+```
+
+**JSON output for programmatic use:**
+```bash
+python -m EasyMD info protein.pdb --format json
+```
+
+**Terminal output only (no file):**
+```bash
+python -m EasyMD info protein.pdb --no-file
+```
+
+**Custom disulfide bond detection:**
+```bash
+python -m EasyMD info protein.pdb --disulfide-distance 3.0
+```
+
+### Analysis Features
+
+**Chain Analysis:**
+- Number of chains and their composition
+- Residue sequences and ranges
+- Protein vs non-protein content
+
+**Missing Residues:**
+- Automatic detection of gaps in residue numbering
+- Gap size and location analysis
+- Context information (residues before/after gaps)
+
+**Ligands and Small Molecules:**
+- Identification of bound ligands
+- Crystallization agents and buffer components
+- Molecular composition and element analysis
+
+**Water Molecules:**
+- Water molecule count and distribution
+- Chain-specific water analysis
+- Spatial distribution statistics
+
+**Disulfide Bonds:**
+- Cysteine residue identification
+- Distance-based disulfide bond prediction
+- Inter-chain and intra-chain bond analysis
+
+**Metal Ions:**
+- Detection of metal ions (Mg²⁺, Zn²⁺, Ca²⁺, etc.)
+- Spatial distribution and occupancy
+- Element-specific statistics
+
+**Modified Residues:**
+- Non-standard amino acid detection
+- Post-translational modifications
+- MODRES record analysis
+
+### Analysis Parameters
+
+**Detection Thresholds:**
+- `--disulfide-distance`: Maximum distance for disulfide bonds (default: 2.5 Å)
+- `--water-threshold`: Minimum waters to show details (default: 10)
+- `--missing-threshold`: Minimum gap size to report (default: 3)
+
+**Output Options:**
+- `--output`: Custom output file name
+- `--format`: Output format (`detailed`, `summary`, `json`)
+- `--no-file`: Terminal output only
+- `--no-color`: Disable colored terminal output
+- `--quiet`: Minimal output mode
+
+### Output Files
+
+**Generated Reports:**
+- `<pdb_name>.info` - Detailed structure analysis report (default)
+- Custom report file specified with `--output`
+- Terminal display with colored formatting
+
+**Report Contents:**
+- Header information (PDB ID, classification, date)
+- Chain composition and sequences
+- Missing residue gaps and locations
+- Ligand identification and properties
+- Water molecule distribution
+- Disulfide bond predictions
+- Metal ion locations
+- Modified residue catalog
+
+### Info Validation
+
+The info module includes comprehensive validation:
+- **File validation**: Checks PDB file existence and format
+- **Parameter validation**: Ensures analysis parameters are reasonable
+- **Error handling**: Clear error messages for file issues
+- **Progress reporting**: Real-time analysis progress
 
 ## Testing
 

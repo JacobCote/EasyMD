@@ -17,6 +17,75 @@ from EasyMD.argManager import ArgManager
 from .argManager.manager import ArgManager
 from .analysis.analysisManager import AnalysisManager
 from .analysis.analysisRunner import AnalysisRunner
+from .info.infoManager import InfoManager
+from .info.infoRunner import InfoRunner
+
+
+def run_info():
+    """
+    Run PDB structure information mode.
+    
+    This function handles the info subcommand, creating an info parser
+    and running structural analysis on PDB files.
+    """
+    parser = argparse.ArgumentParser(
+        prog='EasyMD info',
+        description="""EasyMD PDB Structure Information Tool
+        
+Analyze PDB files to extract detailed structural information including
+chain analysis, missing residues, ligands, water molecules, disulfide bonds,
+metal ions, and modified residues.""",
+        epilog="""Examples:
+  # Basic structure analysis
+  python -m EasyMD info protein.pdb
+  
+  # Analyze with custom output file
+  python -m EasyMD info protein.pdb --output protein_analysis.info
+  
+  # Summary format only
+  python -m EasyMD info protein.pdb --format summary
+  
+  # JSON output for programmatic use
+  python -m EasyMD info protein.pdb --format json
+  
+  # Terminal output only (no file)
+  python -m EasyMD info protein.pdb --no-file
+  
+  # Custom disulfide bond detection
+  python -m EasyMD info protein.pdb --disulfide-distance 3.0
+
+Output Files:
+  - detailed report: <pdb_name>.info (default)
+  - custom report: specified with --output
+  - terminal display with colored formatting
+
+Analysis Features:
+  - Chain composition and sequence analysis
+  - Missing residue detection and gap analysis
+  - Ligand and small molecule identification
+  - Water molecule distribution analysis
+  - Disulfide bond prediction
+  - Metal ion detection
+  - Modified residue identification
+
+For more information, visit: https://github.com/JacobCote/EasyMD""",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    try:
+        info_manager = InfoManager(parser)
+        config = info_manager.get_args()
+        
+        # Run the analysis
+        runner = InfoRunner(config)
+        runner.run()
+        
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Analysis interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n❌ Analysis failed: {str(e)}")
+        sys.exit(1)
 
 
 def run_analysis():
@@ -55,7 +124,7 @@ Output Files:
   - data files: rmsd_data.csv, rmsf_data.csv (with --save-data)
   - analysis summary in terminal
 
-For more information, visit: https://github.com/your-repo/EasyMD""",
+For more information, visit: https://github.com/JacobCote/EasyMD""",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
@@ -81,6 +150,13 @@ def main():
         # Remove 'analyze' from sys.argv and run analysis
         sys.argv.pop(1)
         run_analysis()
+        return
+    
+    # Check if this is an info command
+    if len(sys.argv) > 1 and sys.argv[1] == 'info':
+        # Remove 'info' from sys.argv and run info analysis
+        sys.argv.pop(1)
+        run_info()
         return
     
     # Regular simulation mode
@@ -123,6 +199,13 @@ Analysis:
   # Perform all analyses with custom output
   python -m EasyMD analyze out_0/ --all --output-dir analysis_results
 
+Structure Information:
+  # Get detailed PDB structure information
+  python -m EasyMD info protein.pdb
+  
+  # Generate summary report
+  python -m EasyMD info protein.pdb --format summary
+
 Output Files:
   - trajectory files: output_traj_*.dcd
   - log file: log.txt (energies, temperature, etc.)
@@ -130,7 +213,7 @@ Output Files:
   - system topology: topology.pkl
   - restart files: last_state.xml, restart_setup.yml
 
-For more information and tutorials, visit: https://github.com/your-repo/EasyMD""",
+For more information and tutorials, visit: https://github.com/JacobCote/EasyMD""",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     argManager = ArgManager(parser)
