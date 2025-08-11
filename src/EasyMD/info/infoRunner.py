@@ -9,6 +9,8 @@ import os
 import sys
 import json
 import gzip
+import urllib.request
+import urllib.error
 from pathlib import Path
 from collections import defaultdict, Counter
 from typing import List, Dict, Tuple, Set, Any, Optional
@@ -28,7 +30,7 @@ class InfoRunner:
     def __init__(self, config):
         """Initialize the InfoRunner with configuration."""
         self.config = config
-        self.pdb_file = Path(config.pdb_file)
+        self.pdb_file = Path(config.pdb_file) if config.pdb_file else None
         self.output_file = Path(config.output) if config.output else None
         self.structure_data = {}
         self.analysis_results = {}
@@ -40,12 +42,60 @@ class InfoRunner:
             'underline': '\033[4m', 'end': '\033[0m'
         } if not config.no_color else {k: '' for k in ['header', 'blue', 'green', 'yellow', 'red', 'bold', 'underline', 'end']}
     
+    def _download_pdb_file(self):
+        """Download PDB file from RCSB PDB database."""
+        pdb_code = self.config.url.upper()
+        url = f"https://files.rcsb.org/download/{pdb_code}.pdb"
+        local_filename = f"{pdb_code.lower()}.pdb"
+        
+        print(f"{self.colors['blue']}🌐 Downloading PDB file from RCSB PDB...{self.colors['end']}")
+        print(f"   PDB Code: {pdb_code}")
+        print(f"   URL: {url}")
+        print(f"   Local file: {local_filename}")
+        
+        try:
+            # Download the file
+            with urllib.request.urlopen(url) as response:
+                if response.getcode() != 200:
+                    raise RuntimeError(f"HTTP {response.getcode()}: Failed to download PDB file")
+                
+                # Read and save the content
+                content = response.read().decode('utf-8')
+                
+                with open(local_filename, 'w') as f:
+                    f.write(content)
+                
+                # Update the pdb_file path to point to the downloaded file
+                self.pdb_file = Path(local_filename)
+                
+                # Get file size for display
+                file_size = len(content.encode('utf-8'))
+                print(f"   {self.colors['green']}✅ Download completed ({file_size:,} bytes){self.colors['end']}")
+                
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                raise RuntimeError(f"PDB code '{pdb_code}' not found in RCSB PDB database. "
+                                 "Please check the PDB code and try again.")
+            else:
+                raise RuntimeError(f"HTTP {e.code}: Failed to download PDB file from RCSB PDB")
+        
+        except urllib.error.URLError as e:
+            raise RuntimeError(f"Network error: Failed to connect to RCSB PDB database. "
+                             f"Please check your internet connection. Error: {str(e)}")
+        
+        except Exception as e:
+            raise RuntimeError(f"Failed to download PDB file: {str(e)}")
+    
     def run(self):
         """Execute the complete PDB analysis workflow."""
         try:
             print(f"{self.colors['bold']}{'='*60}{self.colors['end']}")
             print(f"{self.colors['header']}🔬 STARTING PDB STRUCTURE ANALYSIS{self.colors['end']}")
             print(f"{self.colors['bold']}{'='*60}{self.colors['end']}")
+            
+            # Download PDB file if URL was provided
+            if hasattr(self.config, 'url') and self.config.url:
+                self._download_pdb_file()
             
             self._parse_pdb_file()
             self._analyze_structure()
@@ -799,6 +849,11 @@ class InfoRunner:
         print(f"\n📁 Analyzed file: {self.pdb_file}")
         if not self.config.no_file and self.output_file:
             print(f"📄 Report saved to: {self.output_file}")
+        
+        # Handle cleanup of downloaded file
+        if hasattr(self.config, 'url') and self.config.url:
+            print(f"🌐 Downloaded from RCSB PDB: {self.config.url.upper()}")
+            print(f"   Local file: {self.pdb_file} (kept for future use)")
         
         # Summary statistics
         stats = []

@@ -52,8 +52,12 @@ class InfoManager:
         
         # Input/Output parameters
         io_group = self.parser.add_argument_group('Input/Output', 'PDB file and output options')
-        io_group.add_argument("pdb_file", type=str,
-                             help="Path to PDB file to analyze")
+        
+        # Make pdb_file optional when using --url
+        io_group.add_argument("pdb_file", type=str, nargs='?',
+                             help="Path to PDB file to analyze (optional if using --url)")
+        io_group.add_argument("--url", type=str, metavar='PDB_CODE',
+                             help="Download PDB file from RCSB PDB using 4-letter PDB code (e.g., 1ABC)")
         io_group.add_argument("-o", "--output", type=str, default=None,
                              help="Output file for detailed report (default: <pdb_name>.info)")
         io_group.add_argument("--no-file", action='store_true',
@@ -115,8 +119,8 @@ class InfoManager:
         errors = []
         warnings = []
         
-        # Validate PDB file
-        self._validate_pdb_file(args, errors)
+        # Validate PDB file or URL
+        self._validate_pdb_input(args, errors)
         
         # Validate analysis parameters
         self._validate_analysis_parameters(args, errors, warnings)
@@ -136,31 +140,56 @@ class InfoManager:
         # Display validation success message
         self._display_validation_success(args, warnings)
     
-    def _validate_pdb_file(self, args, errors):
-        """Validate PDB file existence and format."""
-        pdb_path = Path(args.pdb_file)
-        
-        if not pdb_path.exists():
-            errors.append(f"PDB file '{args.pdb_file}' does not exist")
+    def _validate_pdb_input(self, args, errors):
+        """Validate PDB file or URL input."""
+        # Check that either pdb_file or url is provided, but not both
+        if not args.pdb_file and not args.url:
+            errors.append("Must provide either a PDB file path or --url with PDB code")
             return
         
-        if not pdb_path.is_file():
-            errors.append(f"'{args.pdb_file}' is not a file")
+        if args.pdb_file and args.url:
+            errors.append("Cannot specify both PDB file and --url option. Choose one input method")
             return
         
-        # Check file extension
-        valid_extensions = ['.pdb', '.pdb.gz', '.ent', '.ent.gz']
-        if not any(args.pdb_file.lower().endswith(ext) for ext in valid_extensions):
-            errors.append(f"File '{args.pdb_file}' does not appear to be a PDB file. "
-                         f"Expected extensions: {', '.join(valid_extensions)}")
-        
-        # Check file size
-        file_size = pdb_path.stat().st_size
-        if file_size == 0:
-            errors.append(f"PDB file '{args.pdb_file}' is empty")
-        elif file_size > 100 * 1024 * 1024:  # 100 MB
-            errors.append(f"Warning: PDB file '{args.pdb_file}' is very large ({file_size / (1024*1024):.1f} MB). "
-                         "Analysis may take a long time")
+        if args.url:
+            # Validate PDB code format
+            pdb_code = args.url.upper()
+            if len(pdb_code) != 4:
+                errors.append(f"PDB code '{args.url}' must be exactly 4 characters long")
+                return
+            
+            if not pdb_code.isalnum():
+                errors.append(f"PDB code '{args.url}' must contain only letters and numbers")
+                return
+            
+            # Set the pdb_file to the downloaded filename for later processing
+            args.pdb_file = f"{pdb_code.lower()}.pdb"
+            
+        else:
+            # Validate local PDB file
+            pdb_path = Path(args.pdb_file)
+            
+            if not pdb_path.exists():
+                errors.append(f"PDB file '{args.pdb_file}' does not exist")
+                return
+            
+            if not pdb_path.is_file():
+                errors.append(f"'{args.pdb_file}' is not a file")
+                return
+            
+            # Check file extension
+            valid_extensions = ['.pdb', '.pdb.gz', '.ent', '.ent.gz']
+            if not any(args.pdb_file.lower().endswith(ext) for ext in valid_extensions):
+                errors.append(f"File '{args.pdb_file}' does not appear to be a PDB file. "
+                             f"Expected extensions: {', '.join(valid_extensions)}")
+            
+            # Check file size
+            file_size = pdb_path.stat().st_size
+            if file_size == 0:
+                errors.append(f"PDB file '{args.pdb_file}' is empty")
+            elif file_size > 100 * 1024 * 1024:  # 100 MB
+                errors.append(f"Warning: PDB file '{args.pdb_file}' is very large ({file_size / (1024*1024):.1f} MB). "
+                             "Analysis may take a long time")
     
     def _validate_analysis_parameters(self, args, errors, warnings):
         """Validate analysis parameters."""
@@ -187,7 +216,7 @@ class InfoManager:
     def _validate_output_options(self, args, errors, warnings):
         """Validate output options."""
         # Set default output file if not specified
-        if args.output is None and not args.no_file:
+        if args.output is None and not args.no_file and args.pdb_file:
             pdb_path = Path(args.pdb_file)
             args.output = str(pdb_path.with_suffix('.info'))
         
@@ -282,7 +311,13 @@ class InfoManager:
         print("\nInfo Analysis Configuration Summary:")
         print("-" * 40)
         
-        print(f"PDB File: {args.pdb_file}")
+        if args.url:
+            print(f"PDB Code: {args.url.upper()}")
+            print(f"Download URL: https://files.rcsb.org/download/{args.url.upper()}.pdb")
+            print(f"Local File: {args.pdb_file}")
+        else:
+            print(f"PDB File: {args.pdb_file}")
+        
         if not args.no_file:
             print(f"Output File: {args.output}")
         else:

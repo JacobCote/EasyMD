@@ -325,6 +325,8 @@ Run PDB structure analysis using the `info` subcommand:
 
 ```bash
 easymd info [pdb_file] [options]
+# or
+easymd info --url [pdb_code] [options]
 ```
 
 ### Info Help
@@ -334,11 +336,26 @@ For comprehensive info help:
 easymd info --help
 ```
 
+### PDB Download Feature
+
+EasyMD can automatically download PDB files from the RCSB Protein Data Bank using 4-letter PDB codes:
+
+```bash
+easymd info --url 1ABC  # Downloads and analyzes PDB structure 1ABC
+```
+
+The downloaded PDB file is saved locally (e.g., `1abc.pdb`) and can be reused for future analyses.
+
 ### Info Examples
 
 **Basic structure analysis:**
 ```bash
 easymd info protein.pdb
+```
+
+**Download and analyze PDB from RCSB PDB:**
+```bash
+easymd info --url 1ABC
 ```
 
 **Custom output file:**
@@ -364,6 +381,11 @@ easymd info protein.pdb --no-file
 **Custom disulfide bond detection:**
 ```bash
 easymd info protein.pdb --disulfide-distance 3.0
+```
+
+**Download and analyze with custom settings:**
+```bash
+easymd info --url 2XYZ --format summary --no-file
 ```
 
 ### Analysis Features

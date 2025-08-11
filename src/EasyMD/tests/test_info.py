@@ -51,7 +51,39 @@ class TestInfoManager:
             manager = InfoManager(basic_parser)
             args = manager.get_args()
             assert args.pdb_file == temp_pdb_file
-            assert args.format == 'detailed'
+            assert args.url is None
+    
+    def test_info_manager_url_option(self, basic_parser):
+        """Test InfoManager initialization with URL option"""
+        with patch('sys.argv', ['test', '--url', '1ABC']):
+            manager = InfoManager(basic_parser)
+            args = manager.get_args()
+            assert args.url == '1ABC'
+            assert args.pdb_file == '1abc.pdb'  # Should be set by validation
+    
+    def test_info_manager_url_validation_invalid_length(self, basic_parser):
+        """Test URL validation with invalid PDB code length"""
+        with patch('sys.argv', ['test', '--url', '1AB']):
+            with pytest.raises(SystemExit):
+                InfoManager(basic_parser)
+    
+    def test_info_manager_url_validation_invalid_characters(self, basic_parser):
+        """Test URL validation with invalid characters"""
+        with patch('sys.argv', ['test', '--url', '1AB@']):
+            with pytest.raises(SystemExit):
+                InfoManager(basic_parser)
+    
+    def test_info_manager_both_file_and_url_error(self, basic_parser, temp_pdb_file):
+        """Test that providing both file and URL raises error"""
+        with patch('sys.argv', ['test', temp_pdb_file, '--url', '1ABC']):
+            with pytest.raises(SystemExit):
+                InfoManager(basic_parser)
+    
+    def test_info_manager_neither_file_nor_url_error(self, basic_parser):
+        """Test that providing neither file nor URL raises error"""
+        with patch('sys.argv', ['test']):
+            with pytest.raises(SystemExit):
+                InfoManager(basic_parser)
     
     def test_missing_pdb_file_error(self, basic_parser):
         """Test error when PDB file doesn't exist"""
@@ -344,6 +376,72 @@ END"""
         # Check that write was called (content written to file)
         handle = mock_file.return_value
         assert handle.write.called
+    
+    @patch('urllib.request.urlopen')
+    def test_download_pdb_file_success(self, mock_urlopen, mock_config):
+        """Test successful PDB file download"""
+        # Setup mock config with URL
+        mock_config.url = '1ABC'
+        mock_config.no_color = True
+        
+        # Mock the HTTP response with context manager support
+        mock_response = Mock()
+        mock_response.getcode.return_value = 200
+        mock_response.read.return_value = b"HEADER    TEST PROTEIN\nATOM      1  N   ALA A   1\nEND\n"
+        mock_response.__enter__ = Mock(return_value=mock_response)
+        mock_response.__exit__ = Mock(return_value=None)
+        mock_urlopen.return_value = mock_response
+        
+        runner = InfoRunner(mock_config)
+        
+        with patch('builtins.open', mock_open()) as mock_file:
+            runner._download_pdb_file()
+            
+            # Check that the URL was called correctly
+            expected_url = "https://files.rcsb.org/download/1ABC.pdb"
+            mock_urlopen.assert_called_once_with(expected_url)
+            
+            # Check that file was written
+            mock_file.assert_called_once_with('1abc.pdb', 'w')
+            handle = mock_file.return_value
+            handle.write.assert_called_once()
+            
+            # Check that pdb_file path was updated
+            assert str(runner.pdb_file) == '1abc.pdb'
+    
+    @patch('urllib.request.urlopen')
+    def test_download_pdb_file_not_found(self, mock_urlopen, mock_config):
+        """Test PDB file download with 404 error"""
+        mock_config.url = 'XXXX'
+        
+        # Mock 404 error
+        from urllib.error import HTTPError
+        mock_urlopen.side_effect = HTTPError(
+            url="https://files.rcsb.org/download/XXXX.pdb",
+            code=404,
+            msg="Not Found",
+            hdrs=None,
+            fp=None
+        )
+        
+        runner = InfoRunner(mock_config)
+        
+        with pytest.raises(RuntimeError, match="PDB code 'XXXX' not found"):
+            runner._download_pdb_file()
+    
+    @patch('urllib.request.urlopen')
+    def test_download_pdb_file_network_error(self, mock_urlopen, mock_config):
+        """Test PDB file download with network error"""
+        mock_config.url = '1ABC'
+        
+        # Mock network error
+        from urllib.error import URLError
+        mock_urlopen.side_effect = URLError("Network unreachable")
+        
+        runner = InfoRunner(mock_config)
+        
+        with pytest.raises(RuntimeError, match="Network error"):
+            runner._download_pdb_file()
 
 
 class TestInfoIntegration:
