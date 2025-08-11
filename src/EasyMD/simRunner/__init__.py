@@ -1,1 +1,1 @@
-from .simRunner import SimRunner
+from EasyMD.simRunner.simRunner import SimRunner

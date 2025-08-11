@@ -5,6 +5,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - python>=3.8
   - mdtraj=1.10.0
   - numpy=1.26.4
   - openbabel=3.1.1
@@ -21,7 +22,9 @@ dependencies:
   - openmmforcefields=0.13.0
   - pandas=2.2.2
   - pdbfixer=1.9
-  - yaml
+  - pyyaml
   - pip
+  - setuptools
+  - wheel
   - pip:
     - -e .

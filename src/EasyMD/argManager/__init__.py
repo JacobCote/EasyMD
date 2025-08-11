@@ -1,1 +1,1 @@
-from .manager import ArgManager
+from EasyMD.argManager.manager import ArgManager

@@ -1,0 +1,8 @@
+include README.md
+include requirements.yml
+include setup.py
+recursive-include src/EasyMD *.py
+recursive-include src/EasyMD */__init__.py
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .DS_Store

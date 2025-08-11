@@ -1,1 +1,1 @@
-from .restarter import Restarter
+from EasyMD.restart.restarter import Restarter
