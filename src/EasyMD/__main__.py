@@ -1,19 +1,10 @@
 import sys, time, argparse
-import os
-import yaml
-import pprint
-import pickle
-import openmm
-from openmm.app import PDBFile, Simulation, StateDataReporter, DCDReporter
-from openmm import app, unit, LangevinIntegrator 
 import EasyMD.utils.utils as utils
-#from prepare.prep_complex import prep_complex
-#from prepare.prep_prot import prep_prot
-#from restart.restart import prep_restart_ligand,restart_simulation,prep_restart
+
 from EasyMD.utils.simulated_annealing import simulated_annealing
 from EasyMD.simRunner import SimRunner
-from EasyMD.sysGenerator import SysGenerator
-from EasyMD.argManager import ArgManager
+from .sysGenerator.sysGenerator import SysGenerator
+#from EasyMD.argManager import ArgManager
 from .argManager.manager import ArgManager
 from .analysis.analysisManager import AnalysisManager
 from .analysis.analysisRunner import AnalysisRunner
