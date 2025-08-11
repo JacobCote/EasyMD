@@ -22,3 +22,6 @@ dependencies:
   - pandas=2.2.2
   - pdbfixer=1.9
   - yaml
+  - pip
+  - pip:
+    - -e .

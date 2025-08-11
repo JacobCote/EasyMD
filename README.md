@@ -20,15 +20,29 @@ To install EasyMD, simply run the following commands:
 git clone https://github.com/JacobCote/EasyMD.git
 cd EasyMD
 conda env create -f requirements.yml
-conda activate MdEnv
+conda activate mdEnv
 # if needed, install openmm with a specific cuda version
 conda install -c conda-forge openmm cudatoolkit=11.8
 ```
 
+The conda environment will automatically install EasyMD in editable mode, allowing you to use the `easymd` command directly:
+```bash
+# These commands will work after installation
+easymd --help
+easymd info protein.pdb
+easymd analyze trajectory_dir/
+```
+
 ## Usage
 
-EasyMD provides a comprehensive command-line interface with organized argument groups and detailed help. Run EasyMD as a Python module:
+EasyMD provides a comprehensive command-line interface with organized argument groups and detailed help. After installation, you can run EasyMD in two ways:
 
+**Direct command (recommended after installation):**
+```bash
+easymd [options]
+```
+
+**Python module (alternative method):**
 ```bash
 python -m EasyMD [options]
 ```
@@ -37,11 +51,15 @@ python -m EasyMD [options]
 
 For comprehensive help with all available options:
 ```bash
+easymd --help
+# or
 python -m EasyMD --help
 ```
 
 For version information:
 ```bash
+easymd --version
+# or
 python -m EasyMD --version
 ```
 
@@ -49,47 +67,47 @@ python -m EasyMD --version
 
 **Basic protein simulation (explicit solvent):**
 ```bash
-python -m EasyMD --protein protein.pdb --steps 5000000 --solvate
+easymd --protein protein.pdb --steps 5000000 --solvate
 ```
 
 **Protein-ligand complex:**
 ```bash
-python -m EasyMD --protein complex.pdb --ligand ATP --steps 10000000 --solvate --temperature 310
+easymd --protein complex.pdb --ligand ATP --steps 10000000 --solvate --temperature 310
 ```
 
 **Fast implicit solvent simulation:**
 ```bash
-python -m EasyMD --protein protein.pdb --steps 1000000 --GBIS
+easymd --protein protein.pdb --steps 1000000 --GBIS
 ```
 
 **Time-based simulation:**
 ```bash
-python -m EasyMD --protein protein.pdb --clock 60 --solvate
+easymd --protein protein.pdb --clock 60 --solvate
 ```
 
 **Using configuration file:**
 ```bash
-python -m EasyMD --config simulation.yml
+easymd --config simulation.yml
 ```
 
 **Restart simulation:**
 ```bash
-python -m EasyMD --restart out_0/
+easymd --restart out_0/
 ```
 
 **Disable periodic box enforcement in trajectory:**
 ```bash
-python -m EasyMD --protein protein.pdb --steps 5000000 --solvate --no-enforce-periodic-box
+easymd --protein protein.pdb --steps 5000000 --solvate --no-enforce-periodic-box
 ```
 
 **Analyze trajectory:**
 ```bash
-python -m EasyMD analyze out_0/ --rmsd --rmsf --save-data
+easymd analyze out_0/ --rmsd --rmsf --save-data
 ```
 
 **Get PDB structure information:**
 ```bash
-python -m EasyMD info protein.pdb
+easymd info protein.pdb
 ```
 
 ### Argument Groups
@@ -160,7 +178,7 @@ missing_residues: "terminal-only"
 enforce_periodic_box: false  # Disable periodic box enforcement in trajectory
 ```
 
-Run with: `python -m EasyMD --config simulation.yml`
+Run with: `easymd --config simulation.yml`
 
 ### Output Files
 
@@ -201,43 +219,43 @@ EasyMD includes a comprehensive analysis module for post-simulation trajectory a
 Run trajectory analysis using the `analyze` subcommand:
 
 ```bash
-python -m EasyMD analyze [trajectory_directory] [options]
+easymd analyze [trajectory_directory] [options]
 ```
 
 ### Analysis Help
 
 For comprehensive analysis help:
 ```bash
-python -m EasyMD analyze --help
+easymd analyze --help
 ```
 
 ### Analysis Examples
 
 **Basic RMSD and RMSF analysis:**
 ```bash
-python -m EasyMD analyze out_0/ --rmsd --rmsf
+easymd analyze out_0/ --rmsd --rmsf
 ```
 
 **Perform all available analyses:**
 ```bash
-python -m EasyMD analyze out_0/ --all --save-data
+easymd analyze out_0/ --all --save-data
 ```
 
 **Custom analysis with specific parameters:**
 ```bash
-python -m EasyMD analyze out_0/ --rmsd --atom-selection backbone \
-                 --reference-frame 10 --skip-frames 5
+easymd analyze out_0/ --rmsd --atom-selection backbone \
+        --reference-frame 10 --skip-frames 5
 ```
 
 **High-quality publication plots:**
 ```bash
-python -m EasyMD analyze out_0/ --rmsf --output-format pdf --dpi 600 \
-                 --plot-style seaborn
+easymd analyze out_0/ --rmsf --output-format pdf --dpi 600 \
+        --plot-style seaborn
 ```
 
 **Analyze specific frame range:**
 ```bash
-python -m EasyMD analyze out_0/ --rmsd --start-frame 1000 --end-frame 5000
+easymd analyze out_0/ --rmsd --start-frame 1000 --end-frame 5000
 ```
 
 ### Available Analyses
@@ -306,46 +324,46 @@ EasyMD includes a comprehensive PDB structure analysis tool that provides detail
 Run PDB structure analysis using the `info` subcommand:
 
 ```bash
-python -m EasyMD info [pdb_file] [options]
+easymd info [pdb_file] [options]
 ```
 
 ### Info Help
 
 For comprehensive info help:
 ```bash
-python -m EasyMD info --help
+easymd info --help
 ```
 
 ### Info Examples
 
 **Basic structure analysis:**
 ```bash
-python -m EasyMD info protein.pdb
+easymd info protein.pdb
 ```
 
 **Custom output file:**
 ```bash
-python -m EasyMD info protein.pdb --output protein_analysis.info
+easymd info protein.pdb --output protein_analysis.info
 ```
 
 **Summary format only:**
 ```bash
-python -m EasyMD info protein.pdb --format summary
+easymd info protein.pdb --format summary
 ```
 
 **JSON output for programmatic use:**
 ```bash
-python -m EasyMD info protein.pdb --format json
+easymd info protein.pdb --format json
 ```
 
 **Terminal output only (no file):**
 ```bash
-python -m EasyMD info protein.pdb --no-file
+easymd info protein.pdb --no-file
 ```
 
 **Custom disulfide bond detection:**
 ```bash
-python -m EasyMD info protein.pdb --disulfide-distance 3.0
+easymd info protein.pdb --disulfide-distance 3.0
 ```
 
 ### Analysis Features
@@ -466,7 +484,7 @@ Test data files are organized in `src/EasyMD/tests/data/` for clean separation f
 
 For parameter-specific help and examples:
 ```bash
-python -m EasyMD --help | grep -A5 "missing-residues"  # Help for specific option
+easymd --help | grep -A5 "missing-residues"  # Help for specific option
 ```
 
 ### Validation Messages
