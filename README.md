@@ -77,6 +77,11 @@ python -m EasyMD --config simulation.yml
 python -m EasyMD --restart out_0/
 ```
 
+**Disable periodic box enforcement in trajectory:**
+```bash
+python -m EasyMD --protein protein.pdb --steps 5000000 --solvate --no-enforce-periodic-box
+```
+
 **Analyze trajectory:**
 ```bash
 python -m EasyMD analyze out_0/ --rmsd --rmsf --save-data
@@ -130,6 +135,8 @@ EasyMD organizes arguments into logical groups for better usability:
 - `-r, --restart`: Restart simulation from specified directory containing state files
 - `--clock`: Simulation time duration in minutes - alternative to --steps
 - `--simulated-annealing`: Use simulated annealing protocol instead of standard MD
+- `--enforce-periodic-box`: Enforce periodic boundary conditions in DCD trajectory output (default: True)
+- `--no-enforce-periodic-box`: Disable periodic boundary conditions enforcement in DCD trajectory output
 
 **Missing Residue Handling:**
 - `--missing-residues`: Strategy for handling missing residues (auto, none, non-terminal, terminal-only, all)
@@ -150,6 +157,7 @@ solvate: true
 ionic_strength: 0.15
 keep_water: true
 missing_residues: "terminal-only"
+enforce_periodic_box: false  # Disable periodic box enforcement in trajectory
 ```
 
 Run with: `python -m EasyMD --config simulation.yml`
@@ -483,6 +491,11 @@ Solvated simulations are made with a PME periodic system using an NPT ensemble.
 Implicit solvent simulations use a generalized Born based implicit solvent.
 
 Ligand charges are calculated using openbabel's python api. Forces for ligands are calculated using the openff-2.2.0 forcefield.
+
+### Trajectory Output Options
+
+**Periodic Boundary Conditions in Trajectories:**
+By default, EasyMD enforces periodic boundary conditions in DCD trajectory files (`--enforce-periodic-box`), which keeps molecules within the simulation box for cleaner visualization. This can be disabled using `--no-enforce-periodic-box` if you need the raw coordinates without periodic wrapping, which may be useful for certain analysis workflows or when working with analysis tools that handle periodic boundaries differently.
 
 EasyMD uses the CUDA toolkit for GPU acceleration if available. 
 ## Roadmap

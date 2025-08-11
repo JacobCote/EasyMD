@@ -134,7 +134,7 @@ class SolvatedRunner:
         # Run the simulation.
         # check for name 
  
-        simulation.reporters.append(DCDReporter(self.config.outdir+'/'+output_traj_dcd, self.config.interval, enforcePeriodicBox=False))
+        simulation.reporters.append(DCDReporter(self.config.outdir+'/'+output_traj_dcd, self.config.interval, enforcePeriodicBox=self.config.enforce_periodic_box))
     
         simulation.reporters.append(StateDataReporter(sys.stdout, self.config.interval * 5, step=True, potentialEnergy=True, temperature=True))
         #add a reporter for a log file

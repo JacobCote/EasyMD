@@ -178,6 +178,12 @@ class ArgManager:
                                    help="Simulation time duration in minutes - alternative to --steps")
         advanced_group.add_argument("--simulated-annealing", action='store_true', default=False, 
                                    help="Use simulated annealing protocol instead of standard MD")
+        advanced_group.add_argument("--enforce-periodic-box", dest='enforce_periodic_box', 
+                                   action='store_true', default=True,
+                                   help="Enforce periodic boundary conditions in DCD trajectory output (default: True)")
+        advanced_group.add_argument("--no-enforce-periodic-box", dest='enforce_periodic_box', 
+                                   action='store_false',
+                                   help="Disable periodic boundary conditions enforcement in DCD trajectory output")
         
         # Missing residue handling
         missing_group = self.parser.add_argument_group('Missing Residue Handling', 

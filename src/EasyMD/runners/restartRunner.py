@@ -125,7 +125,7 @@ class Restarter:
         simulation = Simulation(modeller.topology, system, integrator, state=out_dir+'/'+'last_state.xml')  
         #simulation = Simulation(modeller.topology, system, integrator, platform=platform, state=out_dir+'/'+'last_state.xml')  
         
-        simulation.reporters.append(DCDReporter(out_dir+'/'+f'output_traj_{last_state+1}.dcd', reporting_interval, enforcePeriodicBox=False))
+        simulation.reporters.append(DCDReporter(out_dir+'/'+f'output_traj_{last_state+1}.dcd', reporting_interval, enforcePeriodicBox=self.config.enforce_periodic_box))
         simulation.reporters.append(StateDataReporter(sys.stdout, reporting_interval * 5, step=True, potentialEnergy=True, temperature=True))
         simulation.reporters.append(StateDataReporter(out_dir+'/'+'log.txt', reporting_interval, step=True, potentialEnergy=True, temperature=True,append=True))
 

@@ -150,3 +150,67 @@ class TestRunners:
         assert hasattr(SolvatedRunner, 'run') or hasattr(SolvatedRunner, '__init__')
         assert hasattr(GBISRunner, 'run') or hasattr(GBISRunner, '__init__')
         assert hasattr(AnnealingRunner, 'run') or hasattr(AnnealingRunner, '__init__')
+    
+    @patch('EasyMD.runners.solvatedRunner.DCDReporter')
+    @patch('EasyMD.runners.solvatedRunner.Simulation')
+    @patch('EasyMD.runners.solvatedRunner.LangevinIntegrator')
+    def test_enforce_periodic_box_parameter(self, mock_integrator, mock_simulation, mock_dcd_reporter, mock_config, mock_modeller, mock_system):
+        """Test that enforce_periodic_box parameter is correctly passed to DCDReporter"""
+        from EasyMD.runners.solvatedRunner import SolvatedRunner
+        
+        # Setup mock config with enforce_periodic_box
+        mock_config.temperature = 300
+        mock_config.equilibration_steps = 200
+        mock_config.step_size = 0.002
+        mock_config.friction_coeff = 1.0
+        mock_config.outdir = '/test/output'
+        mock_config.interval = 1000
+        mock_config.enforce_periodic_box = False  # Test with False value
+        
+        # Setup mocks
+        mock_integrator_instance = Mock()
+        mock_integrator.return_value = mock_integrator_instance
+        
+        mock_simulation_instance = Mock()
+        mock_simulation.return_value = mock_simulation_instance
+        mock_simulation_instance.context = Mock()
+        mock_simulation_instance.minimizeEnergy = Mock()
+        mock_simulation_instance.step = Mock()
+        mock_simulation_instance.reporters = []
+        
+        mock_dcd_reporter_instance = Mock()
+        mock_dcd_reporter.return_value = mock_dcd_reporter_instance
+        
+        # Mock system methods
+        mock_system.addForce = Mock()
+        mock_system.usesPeriodicBoundaryConditions = Mock(return_value=True)
+        mock_system.getDefaultPeriodicBoxVectors = Mock(return_value="mock_vectors")
+        
+        # Mock context methods
+        mock_context = mock_simulation_instance.context
+        mock_context.setPositions = Mock()
+        mock_context.getState = Mock()
+        mock_context.setVelocitiesToTemperature = Mock()
+        mock_context.getStepCount = Mock(return_value=1000)
+        
+        # Mock state
+        mock_state = Mock()
+        mock_state.getPositions = Mock(return_value="mock_positions")
+        mock_context.getState.return_value = mock_state
+        
+        runner = SolvatedRunner(mock_config, modeller=mock_modeller, system=mock_system)
+        
+        # Run the simulation
+        with patch('builtins.open', mock_open()), \
+             patch('EasyMD.runners.solvatedRunner.PDBFile'), \
+             patch('EasyMD.runners.solvatedRunner.pickle'), \
+             patch('EasyMD.runners.solvatedRunner.yaml'), \
+             patch('EasyMD.runners.solvatedRunner.time.time', side_effect=[0, 60]):
+            runner.run()
+        
+        # Verify DCDReporter was called with enforce_periodic_box parameter
+        mock_dcd_reporter.assert_called_with(
+            '/test/output/output_traj_0.dcd',
+            1000,
+            enforcePeriodicBox=False
+        )

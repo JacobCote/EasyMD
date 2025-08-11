@@ -143,7 +143,7 @@ class GBISRunner:
 
         # Run the simulation.
    
-        simulation.reporters.append(DCDReporter(self.config.outdir+'/'+output_traj_dcd, self.config.interval))
+        simulation.reporters.append(DCDReporter(self.config.outdir+'/'+output_traj_dcd, self.config.interval, enforcePeriodicBox=self.config.enforce_periodic_box))
         simulation.reporters.append(StateDataReporter(sys.stdout, self.config.interval * 5, step=True, potentialEnergy=True, temperature=True))
         #add a reporter for a log file
         simulation.reporters.append(StateDataReporter(self.config.outdir+'/'+'log.txt', self.config.interval, step=True, potentialEnergy=True, temperature=True))

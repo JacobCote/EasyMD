@@ -127,7 +127,7 @@ class AnnealingRunner:
         # check for name 
     
         
-        simulation.reporters.append(DCDReporter(self.out_dir+'/'+'simulated_anhealing.dcd', self.config.interval))
+        simulation.reporters.append(DCDReporter(self.out_dir+'/'+'simulated_anhealing.dcd', self.config.interval, enforcePeriodicBox=self.config.enforce_periodic_box))
         simulation.reporters.append(StateDataReporter(sys.stdout, self.config.interval * 5, step=True, potentialEnergy=True, temperature=True))
         #add a reporter for a log file
         simulation.reporters.append(StateDataReporter(self.config.out_dir+'/'+'log.txt', self.config.interval, step=True, potentialEnergy=True, temperature=True))

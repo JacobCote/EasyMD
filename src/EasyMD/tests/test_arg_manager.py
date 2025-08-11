@@ -140,3 +140,27 @@ class TestArgManager:
             manager = ArgManager(basic_parser)
             args = manager.get_args()
             assert args.remove == ['DMS', 'LIG', 'WAT']
+    
+    def test_enforce_periodic_box_default(self, basic_parser):
+        """Test that enforce_periodic_box argument has correct default value (True)"""
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate']):
+            manager = ArgManager(basic_parser)
+            args = manager.get_args()
+            assert args.enforce_periodic_box is True
+    
+    def test_enforce_periodic_box_flag(self, basic_parser):
+        """Test that --enforce-periodic-box flag sets enforce_periodic_box to True"""
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate', '--enforce-periodic-box']):
+            manager = ArgManager(basic_parser)
+            args = manager.get_args()
+            assert args.enforce_periodic_box is True
+    
+    def test_enforce_periodic_box_disable_flag(self, basic_parser):
+        """Test that --no-enforce-periodic-box flag sets enforce_periodic_box to False"""
+        test_pdb = get_test_pdb_path()
+        with patch('sys.argv', ['test', '--protein', test_pdb, '--steps', '1000', '--solvate', '--no-enforce-periodic-box']):
+            manager = ArgManager(basic_parser)
+            args = manager.get_args()
+            assert args.enforce_periodic_box is False
