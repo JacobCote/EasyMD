@@ -66,7 +66,7 @@ def test_import():
         return False
     
     try:
-        from EasyMD.sysGenerator.sysGenerator import SysGenerator
+        from EasyMD.sysGenerator.SysGenerator import SysGenerator
         print("✅ SysGenerator import successful")
     except ImportError as e:
         print(f"❌ SysGenerator import failed: {e}")

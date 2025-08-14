@@ -5,7 +5,7 @@ import os
 import sys
 from unittest.mock import Mock, patch, MagicMock
 from EasyMD.argManager.manager import ArgManager
-from EasyMD.sysGenerator.sysGenerator import SysGenerator
+from EasyMD.sysGenerator.SysGenerator import SysGenerator
 
 # Add the test directory to path for importing test utilities
 sys.path.append(os.path.dirname(__file__))
@@ -92,8 +92,8 @@ END
 
     # Test SysGenerator water handling logic
     
-    @patch('EasyMD.sysGenerator.sysGenerator.PDBFixer')
-    @patch('EasyMD.sysGenerator.sysGenerator.Modeller')
+    @patch('EasyMD.sysGenerator.SysGenerator.PDBFixer')
+    @patch('EasyMD.sysGenerator.SysGenerator.Modeller')
     def test_water_removal_default_behavior(self, mock_modeller_class, mock_pdb_fixer):
         """Test that water molecules are removed by default (keep_water=False)"""
         # Setup mock config without keep_water (default behavior)
@@ -133,10 +133,10 @@ END
         
         # Call the method (we'll need to mock the full method call)
         with patch.object(sys_gen, '_handle_missing_residues'):
-            with patch('EasyMD.sysGenerator.sysGenerator.PDBwrite_all'):
-                with patch('EasyMD.sysGenerator.sysGenerator.SystemGenerator'):
-                    with patch('EasyMD.sysGenerator.sysGenerator.mdtraj'):
-                        with patch('EasyMD.sysGenerator.sysGenerator.deletePcap', return_value=mock_modeller):
+            with patch('EasyMD.sysGenerator.SysGenerator.PDBwrite_all'):
+                with patch('EasyMD.sysGenerator.SysGenerator.SystemGenerator'):
+                    with patch('EasyMD.sysGenerator.SysGenerator.mdtraj'):
+                        with patch('EasyMD.sysGenerator.SysGenerator.deletePcap', return_value=mock_modeller):
                             try:
                                 sys_gen._prep_prot(
                                     pdb_in=get_test_pdb_path(),
@@ -161,8 +161,8 @@ END
         expected_deletions = 3  # HOH, WAT, DMS should all be deleted
         assert mock_modeller.delete.call_count == expected_deletions
     
-    @patch('EasyMD.sysGenerator.sysGenerator.PDBFixer')
-    @patch('EasyMD.sysGenerator.sysGenerator.Modeller')
+    @patch('EasyMD.sysGenerator.SysGenerator.PDBFixer')
+    @patch('EasyMD.sysGenerator.SysGenerator.Modeller')
     def test_water_preservation_with_keep_water_true(self, mock_modeller_class, mock_pdb_fixer):
         """Test that water molecules are preserved when keep_water=True"""
         # Setup mock config with keep_water=True
@@ -202,10 +202,10 @@ END
         
         # Call the method (we'll need to mock the full method call)
         with patch.object(sys_gen, '_handle_missing_residues'):
-            with patch('EasyMD.sysGenerator.sysGenerator.PDBwrite_all'):
-                with patch('EasyMD.sysGenerator.sysGenerator.SystemGenerator'):
-                    with patch('EasyMD.sysGenerator.sysGenerator.mdtraj'):
-                        with patch('EasyMD.sysGenerator.sysGenerator.deletePcap', return_value=mock_modeller):
+            with patch('EasyMD.sysGenerator.SysGenerator.PDBwrite_all'):
+                with patch('EasyMD.sysGenerator.SysGenerator.SystemGenerator'):
+                    with patch('EasyMD.sysGenerator.SysGenerator.mdtraj'):
+                        with patch('EasyMD.sysGenerator.SysGenerator.deletePcap', return_value=mock_modeller):
                             try:
                                 sys_gen._prep_prot(
                                     pdb_in=get_test_pdb_path(),

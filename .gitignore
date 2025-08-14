@@ -9,6 +9,9 @@ __pycache__/
 .idea/
 slurm*
 *.pdb
+htmlcov/
+.cov
+*.info
 
 # Build artifacts
 build/

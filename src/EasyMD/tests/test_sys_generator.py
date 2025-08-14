@@ -3,7 +3,8 @@ import tempfile
 import os
 import sys
 from unittest.mock import Mock, patch, MagicMock, mock_open
-from EasyMD.sysGenerator.sysGenerator import SysGenerator
+from EasyMD.sysGenerator.SysGenerator import SysGenerator
+
 
 # Add the test directory to path for importing test utilities
 sys.path.append(os.path.dirname(__file__))
@@ -67,9 +68,9 @@ class TestSysGenerator:
         config.ph = 7.0
         return config
     
-    @patch('EasyMD.sysGenerator.sysGenerator.os.path.isdir')
-    @patch('EasyMD.sysGenerator.sysGenerator.os.mkdir')
-    @patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_prot')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.path.isdir')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.mkdir')
+    @patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._prep_prot')
     def test_init_no_restart_no_ligand(self, mock_prep_prot, mock_mkdir, mock_isdir, mock_config_no_restart):
         """Test initialization without restart and without ligand"""
         mock_isdir.return_value = False
@@ -85,9 +86,9 @@ class TestSysGenerator:
         assert sys_gen.last_state == 0
         mock_prep_prot.assert_called_once()
     
-    @patch('EasyMD.sysGenerator.sysGenerator.os.path.isdir')
-    @patch('EasyMD.sysGenerator.sysGenerator.os.mkdir')
-    @patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_complex')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.path.isdir')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.mkdir')
+    @patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._prep_complex')
     def test_init_no_restart_with_ligand(self, mock_prep_complex, mock_mkdir, mock_isdir, mock_config_with_ligand):
         """Test initialization without restart but with ligand"""
         mock_isdir.return_value = False
@@ -102,7 +103,7 @@ class TestSysGenerator:
         assert sys_gen.system == mock_system
         mock_prep_complex.assert_called_once()
     
-    @patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._restartSetup')
+    @patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._restartSetup')
     def test_init_with_restart(self, mock_restart_setup, mock_config_restart):
         """Test initialization with restart"""
         mock_modeller = Mock()
@@ -116,33 +117,33 @@ class TestSysGenerator:
         assert sys_gen.system == mock_system
         mock_restart_setup.assert_called_once()
     
-    @patch('EasyMD.sysGenerator.sysGenerator.os.path.exists')
-    @patch('EasyMD.sysGenerator.sysGenerator.os.makedirs')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.path.exists')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.makedirs')
     def test_setup_creates_output_directory(self, mock_makedirs, mock_exists, mock_config_no_restart):
         """Test that setup creates output directory when it doesn't exist"""
         mock_exists.side_effect = [True, True, False]  # out_0, out_1 exist, out_2 doesn't
         
-        with patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_prot') as mock_prep:
+        with patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._prep_prot') as mock_prep:
             mock_prep.return_value = (Mock(), Mock())
             SysGenerator(mock_config_no_restart)
         
         mock_makedirs.assert_called_with('out_2', exist_ok=True)
     
-    @patch('EasyMD.sysGenerator.sysGenerator.os.makedirs')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.makedirs')
     def test_setup_uses_provided_outdir(self, mock_makedirs, mock_config_no_restart):
         """Test that setup uses provided output directory"""
         mock_config_no_restart.outdir = 'custom_out/'
         
-        with patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_prot') as mock_prep:
+        with patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._prep_prot') as mock_prep:
             mock_prep.return_value = (Mock(), Mock())
             SysGenerator(mock_config_no_restart)
         
         mock_makedirs.assert_called_with('custom_out/', exist_ok=True)
     
     @patch('builtins.open', new_callable=mock_open, read_data='protein_force_field: amber14-all.xml\nsolvate: true')
-    @patch('EasyMD.sysGenerator.sysGenerator.yaml.load')
-    @patch('EasyMD.sysGenerator.sysGenerator.os.path.isfile')
-    @patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_restart')
+    @patch('EasyMD.sysGenerator.SysGenerator.yaml.load')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.path.isfile')
+    @patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._prep_restart')
     def test_restart_setup_without_ligand(self, mock_prep_restart, mock_isfile, mock_yaml_load, mock_file, mock_config_restart):
         """Test restart setup without ligand file"""
         mock_setup = {'protein_force_field': 'amber14-all.xml', 'solvate': True}
@@ -159,9 +160,9 @@ class TestSysGenerator:
         assert sys_gen.system == mock_system
     
     @patch('builtins.open', new_callable=mock_open, read_data='protein_force_field: amber14-all.xml\nsolvate: true')
-    @patch('EasyMD.sysGenerator.sysGenerator.yaml.load')
-    @patch('EasyMD.sysGenerator.sysGenerator.os.path.isfile')
-    @patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_restart_ligand')
+    @patch('EasyMD.sysGenerator.SysGenerator.yaml.load')
+    @patch('EasyMD.sysGenerator.SysGenerator.os.path.isfile')
+    @patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._prep_restart_ligand')
     def test_restart_setup_with_ligand(self, mock_prep_restart_ligand, mock_isfile, mock_yaml_load, mock_file, mock_config_restart):
         """Test restart setup with ligand file"""
         mock_setup = {'protein_force_field': 'amber14-all.xml', 'solvate': True}
@@ -177,10 +178,10 @@ class TestSysGenerator:
         assert sys_gen.modeller == mock_modeller
         assert sys_gen.system == mock_system
     
-    @patch('EasyMD.sysGenerator.sysGenerator.PDBFile')
-    @patch('EasyMD.sysGenerator.sysGenerator.Molecule.from_file')
-    @patch('EasyMD.sysGenerator.sysGenerator.Modeller')
-    @patch('EasyMD.sysGenerator.sysGenerator.SystemGenerator')
+    @patch('EasyMD.sysGenerator.SysGenerator.PDBFile')
+    @patch('EasyMD.sysGenerator.SysGenerator.Molecule.from_file')
+    @patch('EasyMD.sysGenerator.SysGenerator.Modeller')
+    @patch('EasyMD.sysGenerator.SysGenerator.SystemGenerator')
     def test_prep_restart_ligand_solvated(self, mock_sys_gen, mock_modeller_class, mock_molecule, mock_pdb):
         """Test _prep_restart_ligand with solvated system"""
         setup = {
@@ -213,7 +214,7 @@ class TestSysGenerator:
         """Test that forcefield_kwargs are properly initialized"""
         mock_config_no_restart.solvate = solvate
         
-        with patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_prot') as mock_prep:
+        with patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._prep_prot') as mock_prep:
             mock_prep.return_value = (Mock(), Mock())
             sys_gen = SysGenerator(mock_config_no_restart)
         

@@ -7,7 +7,7 @@ This script demonstrates the terminal residue limiting functionality.
 import tempfile
 import os
 from unittest.mock import Mock
-from EasyMD.sysGenerator.sysGenerator import SysGenerator
+from EasyMD.sysGenerator.SysGenerator import SysGenerator
 
 def test_terminal_residue_filtering():
     """Test that terminal residue filtering respects the max limit."""

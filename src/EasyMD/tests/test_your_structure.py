@@ -40,7 +40,7 @@ def analyze_pdb_file(pdb_file):
             print(f"\n2. Testing with --max-terminal-residues 3:")
             
             # Simulate the filtering
-            from src.EasyMD.sysGenerator.sysGenerator import SysGenerator
+            from src.EasyMD.sysGenerator.SysGenerator import SysGenerator
             from unittest.mock import Mock
             
             # Create mock config

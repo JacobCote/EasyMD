@@ -4,7 +4,7 @@ import tempfile
 import os
 from unittest.mock import Mock, patch, MagicMock
 from EasyMD.argManager.manager import ArgManager
-from EasyMD.sysGenerator.sysGenerator import SysGenerator
+from EasyMD.sysGenerator.SysGenerator import SysGenerator
 
 
 class TestMissingResidueHandling:
@@ -132,7 +132,7 @@ END
 
     # Test SysGenerator missing residue handling methods
     
-    @patch('EasyMD.sysGenerator.sysGenerator.PDBFixer')
+    @patch('EasyMD.sysGenerator.SysGenerator.PDBFixer')
     def test_handle_missing_residues_none_strategy(self, mock_pdb_fixer, mock_config_missing_residues):
         """Test that 'none' strategy clears missing residues"""
         mock_config_missing_residues.missing_residues = 'none'
@@ -151,7 +151,7 @@ END
         # Should clear missing residues
         assert mock_fixer.missingResidues == {}
     
-    @patch('EasyMD.sysGenerator.sysGenerator.PDBFixer')
+    @patch('EasyMD.sysGenerator.SysGenerator.PDBFixer')
     def test_handle_missing_residues_auto_strategy(self, mock_pdb_fixer, mock_config_missing_residues):
         """Test that 'auto' strategy preserves missing residues for PDBFixer"""
         mock_config_missing_residues.missing_residues = 'auto'
@@ -172,7 +172,7 @@ END
         # Should preserve missing residues (they will be added when addMissingAtoms is called)
         assert mock_fixer.missingResidues == original_missing
     
-    @patch('EasyMD.sysGenerator.sysGenerator.PDBFixer')
+    @patch('EasyMD.sysGenerator.SysGenerator.PDBFixer')
     def test_handle_missing_residues_no_missing(self, mock_pdb_fixer, mock_config_missing_residues):
         """Test handling when no missing residues are found"""
         # Create mock fixer with no missing residues

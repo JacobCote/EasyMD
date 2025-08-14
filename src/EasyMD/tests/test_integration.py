@@ -49,16 +49,16 @@ END
         yield temp_file
         os.unlink(temp_file)
     
-    @patch('EasyMD.sysGenerator.sysGenerator.PDBFixer')
-    @patch('EasyMD.sysGenerator.sysGenerator.SystemGenerator')
-    @patch('EasyMD.sysGenerator.sysGenerator.Modeller')
+    @patch('EasyMD.sysGenerator.SysGenerator.PDBFixer')
+    @patch('EasyMD.sysGenerator.SysGenerator.SystemGenerator')
+    @patch('EasyMD.sysGenerator.SysGenerator.Modeller')
     @patch('os.mkdir')
     @patch('os.path.isdir')
     def test_full_workflow_protein_only(self, mock_isdir, mock_mkdir, mock_modeller_class, 
                                        mock_sys_gen, mock_pdb_fixer, temp_pdb_file):
         """Test complete workflow for protein-only simulation"""
         from EasyMD.argManager.manager import ArgManager
-        from EasyMD.sysGenerator.sysGenerator import SysGenerator
+        from EasyMD.sysGenerator.SysGenerator import SysGenerator
         from EasyMD.simRunner.simRunner import SimRunner
         import argparse
         
@@ -80,7 +80,7 @@ END
             config = arg_manager.get_args()
         
         # Test system generation
-        with patch('EasyMD.sysGenerator.sysGenerator.SysGenerator._prep_prot') as mock_prep:
+        with patch('EasyMD.sysGenerator.SysGenerator.SysGenerator._prep_prot') as mock_prep:
             mock_prep.return_value = (mock_modeller_instance, mock_system)
             sys_gen = SysGenerator(config)
         
@@ -137,7 +137,7 @@ END
     def test_restart_workflow_integration(self):
         """Test restart workflow integration"""
         from EasyMD.argManager.manager import ArgManager
-        from EasyMD.sysGenerator.sysGenerator import SysGenerator
+        from EasyMD.sysGenerator.SysGenerator import SysGenerator
         import argparse
         
         # Create mock restart directory structure with all required files
@@ -203,8 +203,8 @@ END
             assert config.restart == temp_dir
             
             # Test system generator with restart
-            with patch('EasyMD.sysGenerator.sysGenerator.PDBFile'), \
-                 patch('EasyMD.sysGenerator.sysGenerator.SystemGenerator'), \
-                 patch('EasyMD.sysGenerator.sysGenerator.Modeller'):
+            with patch('EasyMD.sysGenerator.SysGenerator.PDBFile'), \
+                 patch('EasyMD.sysGenerator.SysGenerator.SystemGenerator'), \
+                 patch('EasyMD.sysGenerator.SysGenerator.Modeller'):
                 sys_gen = SysGenerator(config)
                 assert sys_gen.config.restart == temp_dir

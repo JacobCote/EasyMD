@@ -10,7 +10,7 @@ import tempfile
 import os
 from unittest.mock import Mock, patch
 from src.EasyMD.argManager.manager import ArgManager
-from src.EasyMD.sysGenerator.sysGenerator import SysGenerator
+from src.EasyMD.sysGenerator.SysGenerator import SysGenerator
 
 def create_test_pdb():
     """Create a test PDB file with missing residues."""
