@@ -1,9 +1,17 @@
 out_*/
 venv/
 .venv/
-__pycache__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 .DS_Store
 .idea/
 slurm*
 *.pdb
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
 

@@ -1,1 +1,1 @@
-from EasyMD.sysGenerator.sysGenerator import SysGenerator
+from EasyMD.sysGenerator.SysGenerator import SysGenerator

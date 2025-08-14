@@ -3,13 +3,12 @@ import EasyMD.utils.utils as utils
 
 from EasyMD.utils.simulated_annealing import simulated_annealing
 from EasyMD.simRunner import SimRunner
-from EasyMD.sysGenerator.sysGenerator import SysGenerator
+from EasyMD.sysGenerator.SysGenerator import SysGenerator
 from EasyMD.argManager.manager import ArgManager
 from EasyMD.analysis.analysisManager import AnalysisManager
 from EasyMD.analysis.analysisRunner import AnalysisRunner
 from EasyMD.info.infoManager import InfoManager
 from EasyMD.info.infoRunner import InfoRunner
-
 
 def run_info():
     """
