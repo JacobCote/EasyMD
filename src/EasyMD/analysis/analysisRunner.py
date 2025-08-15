@@ -172,39 +172,89 @@ class AnalysisRunner:
     
     def _calculate_rmsd(self) -> Dict[str, Any]:
         """
-        Calculate Root Mean Square Deviation (RMSD).
+        Calculate Root Mean Square Deviation (RMSD) for each protein chain separately.
         
         Returns:
-            Dictionary containing RMSD data and metadata
+            Dictionary containing RMSD data and metadata for each chain
         """
-        print("   📈 Calculating RMSD...")
+        print("   📈 Calculating RMSD (per chain, excluding water)...")
         
         try:
-            # Get atom indices based on selection
-            atom_indices = self._get_atom_indices(self.config.atom_selection)
-            
-            # Calculate RMSD
             reference_frame = min(self.config.reference_frame, self.trajectory.n_frames - 1)
-            rmsd_values = md.rmsd(self.trajectory, self.trajectory, reference_frame, atom_indices=atom_indices)
+            chains = self._get_protein_chains()
             
-            # Convert to Angstroms
-            rmsd_values *= 10  # nm to Angstroms
+            if not chains:
+                print("   ⚠️  No protein chains found")
+                return None
             
-            print(f"   ✅ RMSD calculated: {len(rmsd_values)} values")
-            print(f"      Mean RMSD: {np.mean(rmsd_values):.2f} Å")
-            print(f"      Max RMSD: {np.max(rmsd_values):.2f} Å")
-            
-            return {
-                'values': rmsd_values,
-                'frames': np.arange(len(rmsd_values)),
+            rmsd_results = {
+                'per_chain': {},
+                'combined': None,
                 'reference_frame': reference_frame,
                 'atom_selection': self.config.atom_selection,
-                'n_atoms': len(atom_indices),
-                'mean': np.mean(rmsd_values),
-                'std': np.std(rmsd_values),
-                'max': np.max(rmsd_values),
-                'min': np.min(rmsd_values)
+                'n_chains': len(chains)
             }
+            
+            # Calculate RMSD for each chain separately
+            all_chain_indices = []
+            for chain_id, chain_atom_indices in chains.items():
+                if not chain_atom_indices:
+                    continue
+                
+                # Get selection-specific indices for this chain
+                selection_indices = self._get_chain_atom_indices(chain_id, self.config.atom_selection)
+                
+                if not selection_indices:
+                    print(f"   ⚠️  No {self.config.atom_selection} atoms found in chain {chain_id}")
+                    continue
+                
+                # Calculate RMSD for this chain
+                chain_rmsd = md.rmsd(self.trajectory, self.trajectory, reference_frame, atom_indices=selection_indices)
+                chain_rmsd *= 10  # Convert nm to Angstroms
+                
+                # Get chain name/identifier
+                chain_name = f"Chain_{chain_id}"
+                try:
+                    # Try to get actual chain ID if available
+                    first_atom = next(atom for atom in self.trajectory.topology.atoms if atom.index in selection_indices)
+                    if hasattr(first_atom.residue.chain, 'id') and first_atom.residue.chain.id:
+                        chain_name = f"Chain_{first_atom.residue.chain.id}"
+                except:
+                    pass
+                
+                rmsd_results['per_chain'][chain_name] = {
+                    'values': chain_rmsd,
+                    'frames': np.arange(len(chain_rmsd)),
+                    'n_atoms': len(selection_indices),
+                    'mean': np.mean(chain_rmsd),
+                    'std': np.std(chain_rmsd),
+                    'max': np.max(chain_rmsd),
+                    'min': np.min(chain_rmsd),
+                    'chain_id': chain_id
+                }
+                
+                all_chain_indices.extend(selection_indices)
+                
+                print(f"   ✅ {chain_name}: {len(selection_indices)} atoms, Mean RMSD: {np.mean(chain_rmsd):.2f} Å")
+            
+            # Calculate combined RMSD for all protein chains
+            if all_chain_indices:
+                combined_rmsd = md.rmsd(self.trajectory, self.trajectory, reference_frame, atom_indices=all_chain_indices)
+                combined_rmsd *= 10  # Convert nm to Angstroms
+                
+                rmsd_results['combined'] = {
+                    'values': combined_rmsd,
+                    'frames': np.arange(len(combined_rmsd)),
+                    'n_atoms': len(all_chain_indices),
+                    'mean': np.mean(combined_rmsd),
+                    'std': np.std(combined_rmsd),
+                    'max': np.max(combined_rmsd),
+                    'min': np.min(combined_rmsd)
+                }
+                
+                print(f"   ✅ Combined: {len(all_chain_indices)} atoms, Mean RMSD: {np.mean(combined_rmsd):.2f} Å")
+            
+            return rmsd_results
             
         except Exception as e:
             print(f"   ❌ RMSD calculation failed: {str(e)}")
@@ -382,24 +432,78 @@ class AnalysisRunner:
     
     def _get_atom_indices(self, selection: str) -> List[int]:
         """
-        Get atom indices based on selection string.
+        Get atom indices based on selection string, excluding water molecules.
         
         Args:
             selection: Atom selection type ('all', 'backbone', 'ca', 'heavy')
             
         Returns:
-            List of atom indices
+            List of atom indices (water molecules excluded)
         """
+        # Get protein atoms only (exclude water and ions)
+        protein_atoms = [atom for atom in self.trajectory.topology.atoms 
+                        if atom.residue.name not in ['HOH', 'WAT', 'TIP', 'H2O', 'Na+', 'Cl-', 'K+', 'Mg2+', 'Ca2+', 'Zn2+', 'SO4', 'PO4']]
+        
         if selection == 'all':
-            return list(range(self.trajectory.n_atoms))
+            return [atom.index for atom in protein_atoms]
         elif selection == 'backbone':
-            return [atom.index for atom in self.trajectory.topology.atoms 
+            return [atom.index for atom in protein_atoms 
                    if atom.name in ['N', 'CA', 'C', 'O']]
         elif selection == 'ca':
-            return [atom.index for atom in self.trajectory.topology.atoms 
+            return [atom.index for atom in protein_atoms 
                    if atom.name == 'CA']
         elif selection == 'heavy':
-            return [atom.index for atom in self.trajectory.topology.atoms 
+            return [atom.index for atom in protein_atoms 
+                   if atom.element.symbol != 'H']
+        else:
+            raise ValueError(f"Unknown atom selection: {selection}")
+    
+    def _get_protein_chains(self) -> Dict[str, List[int]]:
+        """
+        Get atom indices for each protein chain separately.
+        
+        Returns:
+            Dictionary mapping chain IDs to lists of atom indices
+        """
+        chains = {}
+        
+        for atom in self.trajectory.topology.atoms:
+            # Skip water molecules and ions
+            if atom.residue.name in ['HOH', 'WAT', 'TIP', 'H2O', 'Na+', 'Cl-', 'K+', 'Mg2+', 'Ca2+', 'Zn2+', 'SO4', 'PO4']:
+                continue
+            
+            chain_id = atom.residue.chain.index
+            if chain_id not in chains:
+                chains[chain_id] = []
+            chains[chain_id].append(atom.index)
+        
+        return chains
+    
+    def _get_chain_atom_indices(self, chain_id: int, selection: str) -> List[int]:
+        """
+        Get atom indices for a specific chain based on selection string.
+        
+        Args:
+            chain_id: Chain identifier
+            selection: Atom selection type ('all', 'backbone', 'ca', 'heavy')
+            
+        Returns:
+            List of atom indices for the specified chain
+        """
+        chain_atoms = [atom for atom in self.trajectory.topology.atoms 
+                      if atom.residue.chain.index == chain_id and 
+                      atom.residue.name not in ['HOH', 'WAT', 'TIP', 'H2O', 'Na+', 'Cl-', 'K+', 'Mg2+', 'Ca2+', 'Zn2+', 'SO4', 'PO4']]
+        
+        if selection == 'all':
+            return [atom.index for atom in chain_atoms]
+        elif selection == 'backbone':
+            return [atom.index for atom in chain_atoms 
+                   if atom.name in ['N', 'CA', 'C', 'O']]
+        elif selection == 'ca':
+            return [atom.index for atom in chain_atoms 
+                   if atom.name == 'CA']
+        elif selection == 'heavy':
+            return [atom.index for atom in chain_atoms 
                    if atom.element.symbol != 'H']
         else:
             raise ValueError(f"Unknown atom selection: {selection}")
