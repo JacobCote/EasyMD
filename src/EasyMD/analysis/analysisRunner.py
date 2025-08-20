@@ -87,14 +87,18 @@ class AnalysisRunner:
                     results['secondary_structure'] = self._analyze_secondary_structure()
             
             # Generate outputs
+            
             self._generate_outputs(results)
+            
             
             # Display completion summary
             self._display_completion_summary(results)
             
+            
         except Exception as e:
             print(f"\n❌ Analysis failed with error: {str(e)}")
             print("Check the error message above and ensure all input files are valid.")
+            
             sys.exit(1)
     
     def _load_trajectory_data(self):
@@ -268,10 +272,34 @@ class AnalysisRunner:
             Dictionary containing RMSF data and metadata
         """
         print("   📊 Calculating RMSF...")
+    
+        per_chain = {}
+
+        for at in self.trajectory.topology.atoms:
+            if at.name == "CA" :
+                continue
+
+
         
         try:
+
+            chains = self._get_protein_chains()
+            
+            if not chains:
+                print("   ⚠️  No protein chains found")
+                return None
+            
+
+            indices = dict()
+        
+            for i in chains.keys():
+                
+                indices[f"chain_{i}"] = [atom.index for atom in self.trajectory.topology.atoms if atom.name == 'CA' and atom.residue.chain.index == i]
+
+            
             # For RMSF, typically use CA atoms for proteins
             ca_indices = [atom.index for atom in self.trajectory.topology.atoms if atom.name == 'CA']
+            
             
             if not ca_indices:
                 print("   ⚠️  No CA atoms found, using all atoms")
@@ -279,7 +307,30 @@ class AnalysisRunner:
             
             # Calculate RMSF
             reference_frame = min(self.config.reference_frame, self.trajectory.n_frames - 1)
-            rmsf_values = md.rmsf(self.trajectory, self.trajectory, reference_frame, atom_indices=ca_indices)
+            per_chain = {}
+            
+          
+            for chain,indice in indices.items():
+                print(reference_frame)
+                rmsf_values = md.rmsf(self.trajectory, self.trajectory, reference_frame, atom_indices=indice)
+                per_chain[chain] = rmsf_values
+       
+
+            rmsf_values = []
+           
+
+            
+            for chain, values in per_chain.items():
+
+                
+                rmsf_values = rmsf_values + list(values)
+       
+            
+            
+            #print(per_chain)
+
+
+
             
             # Convert to Angstroms
             rmsf_values *= 10  # nm to Angstroms
@@ -289,17 +340,12 @@ class AnalysisRunner:
             print(f"      Max RMSF: {np.max(rmsf_values):.2f} Å")
             
             # Get residue information for plotting
-            if ca_indices:
-                residue_ids = [self.trajectory.topology.atom(i).residue.resSeq for i in ca_indices]
-                residue_names = [self.trajectory.topology.atom(i).residue.name for i in ca_indices]
-            else:
-                residue_ids = list(range(len(rmsf_values)))
-                residue_names = ['UNK'] * len(rmsf_values)
             
+      
             return {
                 'values': rmsf_values,
-                'residue_ids': residue_ids,
-                'residue_names': residue_names,
+                "per_chain" : per_chain,
+                
                 'reference_frame': reference_frame,
                 'n_residues': len(rmsf_values),
                 'mean': np.mean(rmsf_values),
@@ -337,8 +383,8 @@ class AnalysisRunner:
             for i, chain1 in enumerate(chains):
                 for j, chain2 in enumerate(chains[i+1:], i+1):
                     # Get atom indices for each chain
-                    chain1_atoms = [atom.index for atom in chain1.atoms]
-                    chain2_atoms = [atom.index for atom in chain2.atoms]
+                    chain1_atoms = [atom.index for atom in chain1.atoms if atom.name == 'CA']
+                    chain2_atoms = [atom.index for atom in chain2.atoms if atom.name == 'CA']
                     
                     # Calculate center of mass distances
                     distances = []
@@ -469,13 +515,14 @@ class AnalysisRunner:
         
         for atom in self.trajectory.topology.atoms:
             # Skip water molecules and ions
-            if atom.residue.name in ['HOH', 'WAT', 'TIP', 'H2O', 'Na+', 'Cl-', 'K+', 'Mg2+', 'Ca2+', 'Zn2+', 'SO4', 'PO4']:
+            if not atom.residue.is_protein :
                 continue
             
             chain_id = atom.residue.chain.index
             if chain_id not in chains:
                 chains[chain_id] = []
             chains[chain_id].append(atom.index)
+
         
         return chains
     
@@ -526,8 +573,10 @@ class AnalysisRunner:
                 
             print(f"   📈 Generating {analysis_type} outputs...")
             
+            
             if analysis_type == 'rmsd':
                 self._plot_rmsd(data)
+            
             elif analysis_type == 'rmsf':
                 self._plot_rmsf(data)
             elif analysis_type == 'distances':
@@ -537,6 +586,7 @@ class AnalysisRunner:
             elif analysis_type == 'secondary_structure':
                 self._plot_secondary_structure(data)
             
+            
             # Save data if requested
             if self.config.save_data:
                 self._save_data(analysis_type, data)
@@ -545,18 +595,21 @@ class AnalysisRunner:
         """Generate RMSD plot."""
         if self.config.no_plots:
             return
-            
+   
+        
         plt.figure(figsize=(10, 6))
-        plt.plot(data['frames'], data['values'], linewidth=1.5)
+        for i in data["per_chain"].keys():
+            plt.plot(data["per_chain"][i]['frames'], data["per_chain"][i]['values'], linewidth=1.5,label = i)
         plt.title(f'RMSD vs Time ({data["atom_selection"]} atoms)', fontsize=14, fontweight='bold')
         plt.xlabel('Frame', fontsize=12)
         plt.ylabel('RMSD (Å)', fontsize=12)
         plt.grid(True, alpha=0.3)
+        plt.legend()
         
         # Add statistics text
-        stats_text = f"Mean: {data['mean']:.2f} Å\\nStd: {data['std']:.2f} Å\\nMax: {data['max']:.2f} Å"
-        plt.text(0.02, 0.98, stats_text, transform=plt.gca().transAxes, 
-                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+        #stats_text = f"Mean: {data['mean']:.2f} Å\\nStd: {data['std']:.2f} Å\\nMax: {data['max']:.2f} Å"
+        #plt.text(0.02, 0.98, stats_text, transform=plt.gca().transAxes, 
+        #        verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
         
         plt.tight_layout()
         output_file = self.output_dir / f'rmsd.{self.config.output_format}'
@@ -568,13 +621,18 @@ class AnalysisRunner:
         """Generate RMSF plot."""
         if self.config.no_plots:
             return
+       
             
         plt.figure(figsize=(12, 6))
-        plt.plot(data['residue_ids'], data['values'], linewidth=1.5)
+
+        for i in data["per_chain"].keys():
+            plt.plot(data["per_chain"][i], linewidth=1.5,label = i)
+        #plt.plot(data['residue_ids'], data['values'], linewidth=1.5)
         plt.title('RMSF per Residue', fontsize=14, fontweight='bold')
         plt.xlabel('Residue Number', fontsize=12)
         plt.ylabel('RMSF (Å)', fontsize=12)
         plt.grid(True, alpha=0.3)
+        plt.legend()
         
         # Add statistics text
         stats_text = f"Mean: {data['mean']:.2f} Å\\nStd: {data['std']:.2f} Å\\nMax: {data['max']:.2f} Å"
@@ -719,6 +777,7 @@ class AnalysisRunner:
             print(f"      ❌ Failed to save {analysis_type} data: {str(e)}")
     
     def _display_completion_summary(self, results: Dict[str, Any]):
+
         """Display analysis completion summary."""
         print("\n" + "="*60)
         print("🎉 ANALYSIS COMPLETED SUCCESSFULLY")

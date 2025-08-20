@@ -50,19 +50,22 @@ class Restarter:
             system: OpenMM System object containing force field parameters and constraints.
         """
         
-        self.setup = setup
-        self.setup = config.config
+     
+        with open(config.restart+'/restart_setup.yml', 'r') as file:
+            data = yaml.safe_load(file)
+
+        self.setup = data
         
        
         
-        
+
         self.config = config
        
         self.modeller = modeller
         self.system = system
-        self.temperature = self.config.temperature * unit.kelvin
-        self.equilibration_steps = self.config.equilibration_steps
-        self.step_size = self.config.step_size * unit.picoseconds
+        #self.temperature = self.config.temperature * unit.kelvin
+        #self.equilibration_steps = self.config.equilibration_steps
+        #self.step_size = self.config.step_size * unit.picoseconds
       
         
     
