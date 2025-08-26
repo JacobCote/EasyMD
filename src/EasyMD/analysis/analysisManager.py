@@ -85,7 +85,7 @@ class AnalysisManager:
                                  help="Skip every N frames for analysis (default: 1, no skipping)")
         params_group.add_argument("--start-frame", type=int, default=0,
                                  help="Starting frame for analysis (default: 0)")
-        params_group.add_argument("--end-frame", type=int, default=-1,
+        params_group.add_argument("--end-frame", type=int, default=None,
                                  help="Ending frame for analysis (default: all frames)")
         
         # Output options

@@ -144,7 +144,10 @@ class AnalysisRunner:
             print(f"   ✅ Combined trajectory: {self.trajectory.n_frames} total frames")
             
             # Apply frame selection if specified
+        
             self._apply_frame_selection()
+            
+            
             
         except Exception as e:
             raise RuntimeError(f"Failed to load trajectories: {str(e)}")
@@ -215,6 +218,8 @@ class AnalysisRunner:
                 # Calculate RMSD for this chain
                 chain_rmsd = md.rmsd(self.trajectory[self.config.start_frame:self.config.end_frame], self.trajectory, reference_frame, atom_indices=selection_indices)
                 chain_rmsd *= 10  # Convert nm to Angstroms
+                print("______________ LENNNNN _____________")
+                print(len(self.trajectory))
                 
                 # Get chain name/identifier
                 chain_name = f"Chain_{chain_id}"
@@ -295,6 +300,7 @@ class AnalysisRunner:
             for i in chains.keys():
                 
                 indices[f"chain_{i}"] = [atom.index for atom in self.trajectory.topology.atoms if atom.name == 'CA' and atom.residue.chain.index == i]
+                #indices[f"chain_{i}"] = [atom.index for atom in self.trajectory.topology.atoms if atom.residue.chain.index == i]
 
             
             # For RMSF, typically use CA atoms for proteins
@@ -308,12 +314,20 @@ class AnalysisRunner:
             # Calculate RMSF
             reference_frame = min(self.config.reference_frame, self.trajectory.n_frames - 1)
             per_chain = {}
+
+            
             
           
             for chain,indice in indices.items():
+                allignedtraj = self.trajectory.superpose(self.trajectory, 0, atom_indices=indice)
+                print("⚠️"*20)
+                
                 print(reference_frame)
-                rmsf_values = md.rmsf(self.trajectory[self.config.start_frame:self.config.end_frame], self.trajectory, reference_frame, atom_indices=indice)
-                per_chain[chain] = rmsf_values
+                rmsf_values = md.rmsf(allignedtraj, allignedtraj[0], atom_indices=indice)
+                
+                per_chain[chain] = rmsf_values*10
+            print("⚠️"*20)
+            print(per_chain)
        
 
             rmsf_values = []
@@ -420,20 +434,47 @@ class AnalysisRunner:
         print("   🎯 Calculating radius of gyration...")
         
         try:
-            rg_values = md.compute_rg(self.trajectory)
-            rg_values *= 10  # Convert to Angstroms
             
-            print(f"   ✅ Radius of gyration calculated: {len(rg_values)} values")
-            print(f"      Mean Rg: {np.mean(rg_values):.2f} Å")
-            print(f"      Std Rg: {np.std(rg_values):.2f} Å")
+
+            rg_by_chain = {}          # per-frame Rg for each chain
+            avg_rg_by_chain = {}      # mean Rg for each chain
+
+            for i, chain in enumerate(self.trajectory.topology.chains):
+                # choose what you want to include: whole chain, protein-only, CA-only, etc.
+                # Examples:
+                # sel_str = f"chainid {i}"                         # all atoms in that chain
+                # sel_str = f"protein and chainid {i}"             # only protein atoms
+                sel_str = f"protein and name CA and chainid {i}"   # Cα-only (common choice)
+
+                idx = self.trajectory.topology.select(sel_str)
+                if idx.size == 0:
+                    continue
+
+                chain_traj = self.trajectory.atom_slice(idx)
+                rg = md.compute_rg(chain_traj)  # (n_frames,) in nm
+                rg_by_chain[i] = rg
+                avg_rg_by_chain[i] = float(np.mean(rg))
+
+            # Show means
+            print(f"   ✅ Radius of gyration calculated")
+            for i, mean_rg in avg_rg_by_chain.items():
+                print(f"Chain {i}: mean Rg = {mean_rg:.3f} nm")
+
+
+
+                            
+
+
+            
+            
+            
+            
+            
             
             return {
-                'values': rg_values,
-                'frames': np.arange(len(rg_values)),
-                'mean': np.mean(rg_values),
-                'std': np.std(rg_values),
-                'max': np.max(rg_values),
-                'min': np.min(rg_values)
+                'values': rg_by_chain,
+             
+               
             }
             
         except Exception as e:
@@ -678,19 +719,19 @@ class AnalysisRunner:
         """Generate radius of gyration plot."""
         if self.config.no_plots:
             return
+       
+
             
         plt.figure(figsize=(10, 6))
-        plt.plot(data['frames'], data['values'], linewidth=1.5)
+        for i in range(len(data["values"])):
+            plt.plot(data["values"][i], linewidth=1.5,label=f'Chain {i}')
         plt.title('Radius of Gyration vs Time', fontsize=14, fontweight='bold')
         plt.xlabel('Frame', fontsize=12)
-        plt.ylabel('Radius of Gyration (Å)', fontsize=12)
+        plt.ylabel('Radius of Gyration (nm)', fontsize=12)
         plt.grid(True, alpha=0.3)
+        plt.legend()
         
         # Add statistics text
-        stats_text = f"Mean: {data['mean']:.2f} Å\\nStd: {data['std']:.2f} Å"
-        plt.text(0.02, 0.98, stats_text, transform=plt.gca().transAxes, 
-                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
-        
         plt.tight_layout()
         output_file = self.output_dir / f'radius_gyration.{self.config.output_format}'
         plt.savefig(output_file, dpi=self.config.dpi, bbox_inches='tight')
