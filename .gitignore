@@ -12,6 +12,7 @@ slurm*
 htmlcov/
 .cov
 *.info
+*.pka
 
 # Build artifacts
 build/
