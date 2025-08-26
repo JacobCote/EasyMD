@@ -213,7 +213,7 @@ class AnalysisRunner:
                     continue
                 
                 # Calculate RMSD for this chain
-                chain_rmsd = md.rmsd(self.trajectory, self.trajectory, reference_frame, atom_indices=selection_indices)
+                chain_rmsd = md.rmsd(self.trajectory[self.config.start_frame:self.config.end_frame], self.trajectory, reference_frame, atom_indices=selection_indices)
                 chain_rmsd *= 10  # Convert nm to Angstroms
                 
                 # Get chain name/identifier
@@ -243,7 +243,7 @@ class AnalysisRunner:
             
             # Calculate combined RMSD for all protein chains
             if all_chain_indices:
-                combined_rmsd = md.rmsd(self.trajectory, self.trajectory, reference_frame, atom_indices=all_chain_indices)
+                combined_rmsd = md.rmsd(self.trajectory[self.config.start_frame:self.config.end_frame], self.trajectory, reference_frame, atom_indices=all_chain_indices)
                 combined_rmsd *= 10  # Convert nm to Angstroms
                 
                 rmsd_results['combined'] = {
@@ -312,7 +312,7 @@ class AnalysisRunner:
           
             for chain,indice in indices.items():
                 print(reference_frame)
-                rmsf_values = md.rmsf(self.trajectory, self.trajectory, reference_frame, atom_indices=indice)
+                rmsf_values = md.rmsf(self.trajectory[self.config.start_frame:self.config.end_frame], self.trajectory, reference_frame, atom_indices=indice)
                 per_chain[chain] = rmsf_values
        
 

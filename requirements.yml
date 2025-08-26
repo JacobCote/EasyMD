@@ -29,4 +29,6 @@ dependencies:
   - pytest>=6.0
   - pytest-cov>=2.0
   - pip:
+    - biopython
+    - propka
     - -e .
